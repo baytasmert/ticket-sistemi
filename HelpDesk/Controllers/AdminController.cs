@@ -156,6 +156,9 @@ namespace HelpDesk.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
+            var roles = await _userManager.GetRolesAsync(user);
+            var userRole = roles.FirstOrDefault() ?? "Customer";
+
             var model = new EditUserViewModel
             {
                 Id = user.Id,
@@ -164,6 +167,8 @@ namespace HelpDesk.Controllers
                 Telefon = user.Telefon,
                 Departman = user.Departman
             };
+
+            ViewBag.UserRole = userRole;
 
             return View(model);
         }

@@ -32,11 +32,14 @@
                 <span asp-validation-for="Telefon" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Departman" class="form-label"></label>
-                <input asp-for="Departman" class="form-control" />
-                <small class="text-muted">Sadece destek personeli için kullanılır.</small>
-            </div>
+            @if (ViewBag.UserRole == "SupportAgent" || ViewBag.UserRole == "Admin")
+            {
+                <div class="mb-3">
+                    <label asp-for="Departman" class="form-label"></label>
+                    <input asp-for="Departman" class="form-control" />
+                    <small class="text-muted">Destek personeli departmanı.</small>
+                </div>
+            }
 
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary">Güncelle</button>
