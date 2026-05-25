@@ -11,6 +11,11 @@ namespace HelpDesk.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
+        // In-memory rate limiting
+        private static Dictionary<string, (int attempts, DateTime lastAttempt)> _loginAttempts = new();
+        private const int MAX_LOGIN_ATTEMPTS = 5;
+        private const int LOCKOUT_DURATION_MINUTES = 15;
+
         public StaffController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
         {
             _signInManager = signInManager;
@@ -27,6 +32,24 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            // Rate limiting check
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            if (_loginAttempts.TryGetValue(clientIp, out var attempt))
+            {
+                if (DateTime.UtcNow - attempt.lastAttempt < TimeSpan.FromMinutes(LOCKOUT_DURATION_MINUTES))
+                {
+                    if (attempt.attempts >= MAX_LOGIN_ATTEMPTS)
+                    {
+                        ModelState.AddModelError(string.Empty, $"Çok fazla başarısız deneme. {LOCKOUT_DURATION_MINUTES} dakika sonra tekrar deneyin.");
+                        return View(model);
+                    }
+                }
+                else
+                {
+                    _loginAttempts.Remove(clientIp);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
@@ -54,7 +77,18 @@ namespace HelpDesk.Controllers
 
                 if (result.Succeeded)
                 {
+                    _loginAttempts.Remove(clientIp);
                     return RedirectToAction("Dashboard", "Support");
+                }
+
+                // Track failed attempt
+                if (_loginAttempts.TryGetValue(clientIp, out var failedAttempt))
+                {
+                    _loginAttempts[clientIp] = (failedAttempt.attempts + 1, DateTime.UtcNow);
+                }
+                else
+                {
+                    _loginAttempts[clientIp] = (1, DateTime.UtcNow);
                 }
 
                 ModelState.AddModelError(string.Empty, "Email veya şifre hatalı.");

@@ -88,9 +88,31 @@
             &copy; 2026 - HelpDesk - Teknik Destek Sistemi
         </div>
     </footer>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Form submit loading indicator
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form && form.method.toUpperCase() === 'POST') {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('active');
+                }
+                // Disable submit buttons to prevent double-submit
+                const buttons = form.querySelectorAll('button[type="submit"]');
+                buttons.forEach(btn => btn.disabled = true);
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
