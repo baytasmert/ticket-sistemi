@@ -1,2 +1,10 @@
 providers:
   - dotnet
+
+phases:
+  install:
+    cmds:
+      - dotnet restore HelpDesk/HelpDesk.csproj
+  build:
+    cmds:
+      - dotnet publish HelpDesk/HelpDesk.csproj --no-restore -c Release -o out
