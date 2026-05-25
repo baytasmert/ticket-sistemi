@@ -58,11 +58,24 @@ dotnet run
 
 Site: `https://localhost:5001` veya `http://localhost:5000`
 
-## Varsayılan Admin Hesabı
+## Test Hesapları
 
+### Admin
 - **Email**: admin@helpdesk.com
 - **Şifre**: Admin123!
 - **Rol**: Admin
+
+### Customer (Müşteri)
+- **Email**: testuser123@example.com
+- **Şifre**: TestPass123!
+- **Rol**: Customer
+- **Ad/Soyad**: Test Kullanıcı
+
+### SupportAgent (Destek Temsilcisi)
+- **Email**: support@helpdesk.com
+- **Şifre**: Support123!
+- **Rol**: SupportAgent
+- **Ad/Soyad**: Destek Temsilcisi
 
 ## Roller
 
@@ -112,12 +125,12 @@ git merge dev
 - ✅ README.md
 
 ### Faz 1 - Auth + Admin Paneli (Kişi 1)
-- [ ] RegisterViewModel, LoginViewModel
-- [ ] AccountController doldurma
-- [ ] Login/Register/AccessDenied view'ları
-- [ ] AdminController doldurma (kullanıcı yönetimi)
-- [ ] Admin dashboard view'ları
-- [ ] Navbar dinamik menü
+- ✅ RegisterViewModel, LoginViewModel
+- ✅ AccountController doldurma (Register, Login, Logout, AccessDenied)
+- ✅ Login/Register/AccessDenied view'ları
+- ✅ AdminController doldurma (kullanıcı yönetimi)
+- ✅ Admin dashboard view'ları
+- ✅ Navbar dinamik menü (role-based)
 
 ### Faz 2 - Model Tasarımı + Müşteri Tarafı (Kişi 2)
 - [ ] Ticket, TicketReply, Category modelleri
@@ -142,6 +155,31 @@ git merge dev
 - SQLite `helpdesk.db` dosyası proje root'unda otomatik oluşturulur
 - İlk run'da veritabanı otomatik migrate edilir
 - Roles ve admin kullanıcısı otomatik seed edilir
+
+## Durum Özeti (25 Mayıs 2026)
+
+### ✅ Tamamlanan Özellikler:
+- **Faz 0**: İskelet kurulumu (NuGet paketleri, DbContext, Identity yapısı, migrations)
+- **Faz 1**: Authentication & Admin Paneli
+  - Kullanıcı kayıt (Register) - tüm rollere erişim
+  - Giriş/Çıkış (Login/Logout)
+  - Role-based navbar (Admin, SupportAgent, Customer)
+  - Admin paneli - kullanıcı yönetimi ve rol değiştirme
+  - Profesyonel home page tasarımı (hero, features, timeline, roles, stats)
+  - Renk kontrastı iyileştirmeleri
+  
+### 🔄 Test Edilen:
+- Yeni kullanıcı kaydı ✅
+- Admin ile giriş ✅
+- Customer ile giriş ✅
+- Admin paneline erişim ✅
+- Customer'ın /Admin sayfasına erişim engellenmesi ✅
+- Rol değiştirilmesi ✅
+- Logout ✅
+
+### 📝 Bekleyen (Kişi 2):
+- Ticket, TicketReply, Category modelleri
+- Müşteri ticket oluşturma/listeleme sayfaları
 
 ## İletişim
 
