@@ -1,0 +1,28 @@
+<div class="col-md-3">
+    <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+        <div class="card-header bg-primary text-white border-0">
+            <h5 class="mb-0"><i class="bi bi-gear"></i> Admin Menü</h5>
+        </div>
+        <div class="list-group list-group-flush">
+            <a asp-action="Dashboard" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a asp-action="Index" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="bi bi-people"></i> Kullanıcılar
+            </a>
+            <a asp-action="CreateUser" class="list-group-item list-group-item-action">
+                <i class="bi bi-person-plus"></i> Yeni Kullanıcı
+            </a>
+            <a asp-action="Feedbacks" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["action"]?.ToString() == "Feedbacks" ? "active" : "")">
+                <i class="bi bi-chat-left-text"></i> Geri Bildirimler
+                @{
+                    var unreadCount = ViewBag.UnreadFeedback ?? 0;
+                    if (unreadCount > 0)
+                    {
+                        <span class="badge bg-danger ms-auto">@unreadCount</span>
+                    }
+                }
+            </a>
+        </div>
+    </div>
+</div>

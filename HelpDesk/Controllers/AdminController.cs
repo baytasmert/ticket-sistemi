@@ -21,6 +21,34 @@ namespace HelpDesk.Controllers
             _context = context;
         }
 
+        public async Task<IActionResult> Dashboard()
+        {
+            var allUsers = _userManager.Users.ToList();
+            var feedbacks = _context.Feedbacks.ToList();
+
+            var stats = new Dictionary<string, int>
+            {
+                { "ToplamKullanici", allUsers.Count },
+                { "ToplamMusteri", 0 },
+                { "ToplamDestek", 0 },
+                { "ToplamAdmin", 0 },
+                { "OkunmamisFeedback", feedbacks.Count(f => !f.Okundu) },
+                { "ToplamFeedback", feedbacks.Count }
+            };
+
+            foreach (var u in allUsers)
+            {
+                var roles = await _userManager.GetRolesAsync(u);
+                var role = roles.FirstOrDefault() ?? "";
+                if (role == "Admin") stats["ToplamAdmin"]++;
+                else if (role == "SupportAgent") stats["ToplamDestek"]++;
+                else if (role == "Customer") stats["ToplamMusteri"]++;
+            }
+
+            ViewBag.Stats = stats;
+            return View();
+        }
+
         public async Task<IActionResult> Index(string? search)
         {
             var usersQuery = _userManager.Users.AsQueryable();
