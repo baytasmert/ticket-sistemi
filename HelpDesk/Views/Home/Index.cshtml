@@ -1,0 +1,243 @@
+@{
+    ViewData["Title"] = "HelpDesk - Teknik Destek Sistemi";
+}
+
+<!-- Hero Section -->
+<div class="hero-section bg-gradient text-white py-5">
+    <div class="container text-center">
+        <h1 class="display-3 fw-bold mb-4">HelpDesk</h1>
+        <p class="lead mb-4">Müşteri destek taleplerini hızlı ve etkili bir şekilde yönetin</p>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="mt-4">
+                <p class="h5 mb-4">Hoş geldiniz, <strong>@User.Identity.Name</strong>!</p>
+                @if (User.IsInRole("Customer"))
+                {
+                    <a href="@Url.Action("Index", "Tickets")" class="btn btn-light btn-lg me-2">
+                        <i class="bi bi-ticket"></i> Taleplerim
+                    </a>
+                }
+                @if (User.IsInRole("SupportAgent") || User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Dashboard", "Support")" class="btn btn-light btn-lg me-2">
+                        <i class="bi bi-speedometer2"></i> Destek Paneli
+                    </a>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Index", "Admin")" class="btn btn-warning btn-lg">
+                        <i class="bi bi-gear"></i> Admin
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mt-4">
+                <a href="@Url.Action("Register", "Account")" class="btn btn-light btn-lg me-2">
+                    <i class="bi bi-person-plus"></i> Kayıt Ol
+                </a>
+                <a href="@Url.Action("Login", "Account")" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Giriş Yap
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold">Neden HelpDesk?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature-card h-100 p-4 rounded shadow-sm">
+                    <div class="feature-icon text-primary mb-3">
+                        <i class="bi bi-lightning-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4>Hızlı Çözüm</h4>
+                    <p class="text-muted">Destek taleplerini hızla kategorize edin ve önceliklendir, sorunları daha hızlı çözün.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card h-100 p-4 rounded shadow-sm">
+                    <div class="feature-icon text-success mb-3">
+                        <i class="bi bi-chat-dots-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4>İletişim</h4>
+                    <p class="text-muted">Müşteri ve destek ekibi arasında sorunsuz iletişim. Tüm konuşmalar kaydedilir.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card h-100 p-4 rounded shadow-sm">
+                    <div class="feature-icon text-info mb-3">
+                        <i class="bi bi-bar-chart-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4>Analitikler</h4>
+                    <p class="text-muted">Detaylı raporlar ve istatistikler ile destek performansınızı izleyin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-works-section bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold">Nasıl Çalışır?</h2>
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="timeline">
+                    <div class="timeline-item mb-5">
+                        <div class="d-flex">
+                            <div class="timeline-marker bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 50px; height: 50px; min-width: 50px;">
+                                <strong>1</strong>
+                            </div>
+                            <div>
+                                <h5>Talep Oluştur</h5>
+                                <p class="text-muted">Müşteri bir sorunu rapor ederek yeni bir destek talebi açar. Kategori ve öncelik seviyesini belirtir.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline-item mb-5">
+                        <div class="d-flex">
+                            <div class="timeline-marker bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 50px; height: 50px; min-width: 50px;">
+                                <strong>2</strong>
+                            </div>
+                            <div>
+                                <h5>Atama</h5>
+                                <p class="text-muted">Admin veya otomatik sistem, talebi uygun bir destek temsilcisine atar.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline-item mb-5">
+                        <div class="d-flex">
+                            <div class="timeline-marker bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 50px; height: 50px; min-width: 50px;">
+                                <strong>3</strong>
+                            </div>
+                            <div>
+                                <h5>İşleme Al</h5>
+                                <p class="text-muted">Destek temsilcisi sorunu inceleyip çözüm önerir veya ek bilgi talep eder.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="d-flex">
+                            <div class="timeline-marker bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 50px; height: 50px; min-width: 50px;">
+                                <strong>4</strong>
+                            </div>
+                            <div>
+                                <h5>Kapatma</h5>
+                                <p class="text-muted">Sorun çözüldüğünde talep kapatılır. Müşteri derecelendirme yapabilir.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Roles Section -->
+<section class="roles-section py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold">Roller</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="role-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="role-icon mb-3" style="font-size: 3rem;">👤</div>
+                        <h5 class="card-title">Müşteri (Customer)</h5>
+                        <p class="card-text text-muted">
+                            • Destek talebi oluştur<br>
+                            • Talep durumunu izle<br>
+                            • Cevaplar alıp yanıt ver<br>
+                            • Kapalı talepler detayını gör
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="role-card card h-100 border-0 shadow-sm border-info">
+                    <div class="card-body text-center">
+                        <div class="role-icon mb-3" style="font-size: 3rem;">🎧</div>
+                        <h5 class="card-title">Destek Temsilcisi (SupportAgent)</h5>
+                        <p class="card-text text-muted">
+                            • Atanan talepler göster<br>
+                            • Talep detayını gözden geçir<br>
+                            • Cevap yaz ve durum güncelle<br>
+                            • Filtreli talep listesi
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="role-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="role-icon mb-3" style="font-size: 3rem;">⚙️</div>
+                        <h5 class="card-title">Admin</h5>
+                        <p class="card-text text-muted">
+                            • Tüm talepler ve analitikleri gör<br>
+                            • Kullanıcıları yönet<br>
+                            • Rol atama/değiştirme<br>
+                            • Sistem istatistikleri
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+@if (!User.Identity?.IsAuthenticated == true)
+{
+    <section class="cta-section bg-gradient text-white py-5">
+        <div class="container text-center">
+            <h2 class="mb-4 fw-bold">Hemen Başla</h2>
+            <p class="lead mb-4">HelpDesk ile müşteri desteğini daha etkili yönet</p>
+            <div>
+                <a href="@Url.Action("Register", "Account")" class="btn btn-light btn-lg me-2">
+                    <i class="bi bi-person-plus"></i> Kayıt Ol
+                </a>
+                <a href="@Url.Action("Login", "Account")" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Giriş Yap
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+<!-- Stats Section -->
+<section class="stats-section py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold">İstatistikler</h2>
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="stat-box p-4">
+                    <h3 class="text-primary fw-bold" style="font-size: 2.5rem;">24/7</h3>
+                    <p class="text-muted">Kesintisiz Hizmet</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-box p-4">
+                    <h3 class="text-success fw-bold" style="font-size: 2.5rem;">∞</h3>
+                    <p class="text-muted">Sınırsız Talep</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-box p-4">
+                    <h3 class="text-info fw-bold" style="font-size: 2.5rem;">3</h3>
+                    <p class="text-muted">Rol Sistemi</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-box p-4">
+                    <h3 class="text-warning fw-bold" style="font-size: 2.5rem;">✓</h3>
+                    <p class="text-muted">Güvenli</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

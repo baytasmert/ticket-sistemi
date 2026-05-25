@@ -1,0 +1,96 @@
+@model List<UserListViewModel>
+
+@{
+    ViewData["Title"] = "Admin Paneli - Kullanıcı Yönetimi";
+}
+
+<h2>@ViewData["Title"]</h2>
+<hr />
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Toplam Kullanıcı</h5>
+                <p class="card-text">@ViewBag.Stats["ToplamKullanici"]</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Admin</h5>
+                <p class="card-text">@ViewBag.Stats["AdminSayisi"]</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Destek Temsilcisi</h5>
+                <p class="card-text">@ViewBag.Stats["SupportAgentSayisi"]</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Müşteri</h5>
+                <p class="card-text">@ViewBag.Stats["CustomerSayisi"]</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Ad Soyad</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.AdSoyad</td>
+                <td>@user.Email</td>
+                <td>
+                    <span class="badge bg-info">@user.Rol</span>
+                </td>
+                <td>
+                    @if (user.AktifMi)
+                    {
+                        <span class="badge bg-success">Aktif</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Pasif</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="EditRole" asp-route-userId="@user.Id" class="btn btn-sm btn-primary">
+                        Rol Değiştir
+                    </a>
+                    <form asp-action="ToggleActive" asp-route-userId="@user.Id" method="post" style="display: inline;">
+                        @if (user.AktifMi)
+                        {
+                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Bu kullanıcıyı pasif yapmak istediğinize emin misiniz?')">
+                                Pasifleştir
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Bu kullanıcıyı aktif yapmak istediğinize emin misiniz?')">
+                                Aktifleştir
+                            </button>
+                        }
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

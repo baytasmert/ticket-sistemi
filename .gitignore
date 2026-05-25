@@ -1,0 +1,49 @@
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# .NET
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+*.ide
+.idea/
+
+# Environment
+.env
+.env.local
+appsettings.Development.json
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# NuGet
+.nuget/
+packages/
+
+# Claude Code
+.claude/
+
+# Node (if used)
+node_modules/
+npm-debug.log
+
+# Temporary files
+*.tmp
+*.temp
