@@ -108,6 +108,9 @@
                     }
                 </td>
                 <td>
+                    <a asp-action="EditUser" asp-route-userId="@user.Id" class="btn btn-sm btn-info">
+                        <i class="bi bi-pencil"></i> Düzenle
+                    </a>
                     <a asp-action="EditRole" asp-route-userId="@user.Id" class="btn btn-sm btn-primary">
                         Rol Değiştir
                     </a>

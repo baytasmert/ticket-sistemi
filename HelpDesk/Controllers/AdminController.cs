@@ -150,6 +150,53 @@ namespace HelpDesk.Controllers
             return View();
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+
+            var model = new EditUserViewModel
+            {
+                Id = user.Id,
+                AdSoyad = user.AdSoyad,
+                Email = user.Email ?? "",
+                Telefon = user.Telefon,
+                Departman = user.Departman
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser(EditUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByIdAsync(model.Id);
+            if (user == null) return NotFound();
+
+            user.AdSoyad = model.AdSoyad;
+            user.Telefon = model.Telefon;
+            user.Departman = model.Departman;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = $"{user.Email} kullanıcısı güncellendi.";
+                return RedirectToAction("Index");
+            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            return View(model);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateUser(CreateUserViewModel model)

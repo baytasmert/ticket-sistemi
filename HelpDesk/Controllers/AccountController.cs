@@ -67,6 +67,17 @@ namespace HelpDesk.Controllers
         {
             if (ModelState.IsValid)
             {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    var roles = await _userManager.GetRolesAsync(user);
+                    if (roles.Contains("SupportAgent") || roles.Contains("Admin"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Destek ekibi üyesi misiniz? Lütfen /staff/login adresini kullanın.");
+                        return View(model);
+                    }
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(
                     model.Email,
                     model.Password,
@@ -75,7 +86,6 @@ namespace HelpDesk.Controllers
 
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
                     if (user != null && !user.AktifMi)
                     {
                         await _signInManager.SignOutAsync();
