@@ -18,9 +18,19 @@ namespace HelpDesk.Controllers
             _roleManager = roleManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search)
         {
-            var users = _userManager.Users.ToList();
+            var usersQuery = _userManager.Users.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLower();
+                usersQuery = usersQuery.Where(u =>
+                    u.Email!.ToLower().Contains(searchLower) ||
+                    u.AdSoyad.ToLower().Contains(searchLower));
+            }
+
+            var users = usersQuery.ToList();
             var userViewModels = new List<UserListViewModel>();
 
             foreach (var user in users)
@@ -36,15 +46,25 @@ namespace HelpDesk.Controllers
                 });
             }
 
+            var allUsers = _userManager.Users.ToList();
             var stats = new Dictionary<string, int>
             {
-                { "ToplamKullanici", users.Count },
-                { "AdminSayisi", userViewModels.Count(u => u.Rol == "Admin") },
-                { "SupportAgentSayisi", userViewModels.Count(u => u.Rol == "SupportAgent") },
-                { "CustomerSayisi", userViewModels.Count(u => u.Rol == "Customer") }
+                { "ToplamKullanici", allUsers.Count },
+                { "AdminSayisi", 0 },
+                { "SupportAgentSayisi", 0 },
+                { "CustomerSayisi", 0 }
             };
+            foreach (var u in allUsers)
+            {
+                var r = await _userManager.GetRolesAsync(u);
+                var role = r.FirstOrDefault() ?? "";
+                if (role == "Admin") stats["AdminSayisi"]++;
+                else if (role == "SupportAgent") stats["SupportAgentSayisi"]++;
+                else if (role == "Customer") stats["CustomerSayisi"]++;
+            }
 
             ViewBag.Stats = stats;
+            ViewBag.Search = search;
 
             return View(userViewModels);
         }
@@ -74,20 +94,15 @@ namespace HelpDesk.Controllers
         public async Task<IActionResult> EditRole(string userId, string newRole)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             var currentRoles = await _userManager.GetRolesAsync(user);
-
             if (currentRoles.Any())
-            {
                 await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            }
 
             await _userManager.AddToRoleAsync(user, newRole);
 
+            TempData["Success"] = $"{user.Email} kullanıcısının rolü '{newRole}' olarak güncellendi.";
             return RedirectToAction("Index");
         }
 
@@ -96,14 +111,79 @@ namespace HelpDesk.Controllers
         public async Task<IActionResult> ToggleActive(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             user.AktifMi = !user.AktifMi;
             await _userManager.UpdateAsync(user);
 
+            var durum = user.AktifMi ? "aktif" : "pasif";
+            TempData["Success"] = $"{user.Email} kullanıcısı {durum} yapıldı.";
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.Id == userId)
+            {
+                TempData["Error"] = "Kendinizi silemezsiniz.";
+                return RedirectToAction("Index");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+
+            var email = user.Email;
+            await _userManager.DeleteAsync(user);
+
+            TempData["Success"] = $"{email} kullanıcısı silindi.";
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult CreateUser()
+        {
+            ViewBag.Roller = new[] { "Customer", "SupportAgent", "Admin" };
+            ViewBag.Departmanlar = new[] { "Teknik Destek", "Müşteri Hizmetleri", "Fatura & Ödeme", "Genel" };
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser(CreateUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Roller = new[] { "Customer", "SupportAgent", "Admin" };
+                ViewBag.Departmanlar = new[] { "Teknik Destek", "Müşteri Hizmetleri", "Fatura & Ödeme", "Genel" };
+                return View(model);
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                AdSoyad = model.AdSoyad,
+                Telefon = model.Telefon,
+                Departman = model.Departman,
+                AktifMi = true
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                ViewBag.Roller = new[] { "Customer", "SupportAgent", "Admin" };
+                ViewBag.Departmanlar = new[] { "Teknik Destek", "Müşteri Hizmetleri", "Fatura & Ödeme", "Genel" };
+                return View(model);
+            }
+
+            await _userManager.AddToRoleAsync(user, model.Rol);
+            TempData["Success"] = $"{model.Email} kullanıcısı '{model.Rol}' rolüyle oluşturuldu.";
             return RedirectToAction("Index");
         }
     }

@@ -1,0 +1,51 @@
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Personel Giriş";
+}
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <h2 class="mb-4 text-center fw-bold">⚙️ Destek Ekibi Girişi</h2>
+                <hr />
+
+                <form asp-action="Login" asp-controller="Staff" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" placeholder="Email adresiniz" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" placeholder="Şifreniz" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" asp-for="RememberMe" />
+                        <label class="form-check-label" asp-for="RememberMe"></label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Giriş Yap</button>
+                </form>
+
+                <hr class="my-4" />
+
+                <p class="text-center text-muted mb-0">
+                    Müşteri misiniz? <a asp-action="Index" asp-controller="Home" class="text-decoration-none">Ana sayfaya dön</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

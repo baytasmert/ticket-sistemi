@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using HelpDesk.Models;
@@ -74,6 +75,13 @@ namespace HelpDesk.Controllers
 
                 if (result.Succeeded)
                 {
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    if (user != null && !user.AktifMi)
+                    {
+                        await _signInManager.SignOutAsync();
+                        ModelState.AddModelError(string.Empty, "Hesabınız devre dışı bırakılmıştır. Yönetici ile iletişime geçin.");
+                        return View(model);
+                    }
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -94,6 +102,43 @@ namespace HelpDesk.Controllers
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var model = new ProfileViewModel
+            {
+                AdSoyad = user.AdSoyad,
+                Telefon = user.Telefon,
+                Email = user.Email ?? "",
+                Rol = roles.FirstOrDefault() ?? "Bilinmiyor"
+            };
+
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(ProfileViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login");
+
+            user.AdSoyad = model.AdSoyad;
+            user.Telefon = model.Telefon;
+            await _userManager.UpdateAsync(user);
+
+            TempData["Success"] = "Profil başarıyla güncellendi.";
+            return RedirectToAction("Profile");
         }
     }
 }

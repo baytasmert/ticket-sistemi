@@ -12,6 +12,9 @@ namespace HelpDesk.Models
         [StringLength(15, ErrorMessage = "Telefon numarası en fazla 15 karakter olmalıdır.")]
         public string? Telefon { get; set; }
 
+        [StringLength(100)]
+        public string? Departman { get; set; }
+
         public bool AktifMi { get; set; } = true;
     }
 }

@@ -8,6 +8,10 @@
     <div class="col-md-4 offset-md-4">
         <h2>@ViewData["Title"]</h2>
         <hr />
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle"></i> <strong>Müşteri Kaydı</strong><br>
+            Destek ekibi üyesiyseniz <a href="/staff/login" class="alert-link">personel girişini</a> kullanın.
+        </div>
         <form asp-action="Register" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 

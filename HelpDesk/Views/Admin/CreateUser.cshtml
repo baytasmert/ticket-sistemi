@@ -1,0 +1,91 @@
+@model CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Yeni Kullanıcı Ekle";
+}
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>@ViewData["Title"]</h2>
+        <hr />
+
+        <form asp-action="CreateUser" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="AdSoyad" class="form-label"></label>
+                <input asp-for="AdSoyad" class="form-control" />
+                <span asp-validation-for="AdSoyad" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" type="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Telefon" class="form-label"></label>
+                <input asp-for="Telefon" class="form-control" />
+                <span asp-validation-for="Telefon" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Rol" class="form-label"></label>
+                <select asp-for="Rol" class="form-select" required>
+                    <option value="">-- Rol seçin --</option>
+                    @foreach (var rol in ViewBag.Roller)
+                    {
+                        <option value="@rol">@rol</option>
+                    }
+                </select>
+                <span asp-validation-for="Rol" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3" id="departmanDiv" style="display: none;">
+                <label asp-for="Departman" class="form-label"></label>
+                <select asp-for="Departman" class="form-select">
+                    <option value="">-- Departman seçin --</option>
+                    @foreach (var dept in ViewBag.Departmanlar)
+                    {
+                        <option value="@dept">@dept</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Oluştur</button>
+                <a asp-action="Index" class="btn btn-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.getElementById('Rol').addEventListener('change', function() {
+            var departmanDiv = document.getElementById('departmanDiv');
+            if (this.value === 'SupportAgent' || this.value === 'Admin') {
+                departmanDiv.style.display = 'block';
+            } else {
+                departmanDiv.style.display = 'none';
+            }
+        });
+    </script>
+}
