@@ -1,4 +1,2 @@
 #!/bin/bash
-cd HelpDesk
-dotnet build --configuration Release
-dotnet run --configuration Release --urls http://+:${PORT:-5065}
+exec dotnet HelpDesk/out/HelpDesk.dll --urls http://+:${PORT:-5000}

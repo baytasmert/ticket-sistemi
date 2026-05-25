@@ -1,0 +1,13 @@
+[build]
+# Specify the project directory
+inputs = ["HelpDesk"]
+
+[build.env]
+# Build flags
+DOTNET_SDK_VERSION = "6.0"
+
+[[build.providers]]
+name = "dotnet"
+
+[build.providers.buildConfig]
+projectFile = "HelpDesk/HelpDesk.csproj"

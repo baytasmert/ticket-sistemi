@@ -1,1 +1,1 @@
-web: cd HelpDesk && dotnet build --configuration Release && dotnet run --configuration Release --urls http://+:$PORT
+web: HelpDesk/out/HelpDesk.dll --urls http://+:${PORT:-5000}

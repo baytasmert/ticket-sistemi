@@ -1,0 +1,11 @@
+providers:
+  - dotnet
+
+nixpacks:
+  apt:
+    - curl
+  env:
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+buildConfig:
+  projectFile: "HelpDesk/HelpDesk.csproj"
