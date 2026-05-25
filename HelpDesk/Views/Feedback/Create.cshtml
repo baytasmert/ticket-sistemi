@@ -1,0 +1,54 @@
+@model FeedbackViewModel
+
+@{
+    ViewData["Title"] = "Geri Bildirim Gönder";
+}
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>@ViewData["Title"]</h2>
+        <p class="text-muted">Uygulamayla ilgili görüşlerinizi bizimle paylaşın.</p>
+        <hr />
+
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Kategori" class="form-label"></label>
+                <select asp-for="Kategori" class="form-select" required>
+                    <option value="">-- Kategori seçin --</option>
+                    @foreach (var kat in ViewBag.Kategoriler)
+                    {
+                        <option value="@kat">@kat</option>
+                    }
+                </select>
+                <span asp-validation-for="Kategori" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Mesaj" class="form-label"></label>
+                <textarea asp-for="Mesaj" class="form-control" rows="5" placeholder="Detaylı bir şekilde açıklayın..."></textarea>
+                <span asp-validation-for="Mesaj" class="text-danger"></span>
+                <small class="text-muted">Min. 10 karakter</small>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" type="email" placeholder="örnek@email.com" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+                <small class="text-muted">Geri dönüş için email bırakabilirsiniz (opsiyonel)</small>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Gönder</button>
+                <a asp-action="Index" asp-controller="Home" class="btn btn-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

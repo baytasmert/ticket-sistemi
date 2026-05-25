@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using HelpDesk.Models;
 using HelpDesk.ViewModels;
+using HelpDesk.Data;
 
 namespace HelpDesk.Controllers
 {
@@ -11,11 +12,13 @@ namespace HelpDesk.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
 
-        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _context = context;
         }
 
         public async Task<IActionResult> Index(string? search)
@@ -140,6 +143,41 @@ namespace HelpDesk.Controllers
 
             TempData["Success"] = $"{email} kullanıcısı silindi.";
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult Feedbacks()
+        {
+            var feedbacks = _context.Feedbacks.OrderByDescending(f => f.CreatedAt).ToList();
+            return View(feedbacks);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAsRead(int feedbackId)
+        {
+            var feedback = await _context.Feedbacks.FindAsync(feedbackId);
+            if (feedback == null) return NotFound();
+
+            feedback.Okundu = !feedback.Okundu;
+            _context.Feedbacks.Update(feedback);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Feedbacks");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFeedback(int feedbackId)
+        {
+            var feedback = await _context.Feedbacks.FindAsync(feedbackId);
+            if (feedback == null) return NotFound();
+
+            _context.Feedbacks.Remove(feedback);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Geri bildirim silindi.";
+            return RedirectToAction("Feedbacks");
         }
 
         [HttpGet]

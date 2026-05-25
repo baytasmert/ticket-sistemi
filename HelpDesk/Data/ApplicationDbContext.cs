@@ -11,6 +11,8 @@ namespace HelpDesk.Data
         {
         }
 
+        public DbSet<Feedback> Feedbacks { get; set; }
+
         // Kişi 2 tarafından doldurulacak:
         // public DbSet<Ticket> Tickets { get; set; }
         // public DbSet<TicketReply> TicketReplies { get; set; }
