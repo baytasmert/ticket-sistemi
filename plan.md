@@ -9,6 +9,21 @@ HelpDesk projesi 3 kişilik ekip tarafından 3 faz halinde geliştirilmektedir:
 
 ---
 
+## 📊 Dashboard Mimarisi
+
+Sistemde **iki farklı dashboard** vardır - amaçları ve içerikleri farklı:
+
+| | **Admin Dashboard** | **Support Dashboard** |
+|---|---|---|
+| **URL** | `/Admin` (Kişi 1) | `/Support/Dashboard` (Kişi 3) |
+| **Kim için** | Admin → Sistem yönetimi | Support Agent/Admin → Ticket yönetimi |
+| **Amacı** | Sistem sağlığı, kullanıcı yönetimi | Günlük iş - bekleyen talepler |
+| **İçerik** | Kullanıcı istatistikleri, geri bildirimler | Talep istatistikleri, bekleyen talepler |
+| **Kartlar** | Toplam Kullanıcı, Admin, SupportAgent, Customer | Toplam Talep, Açık, Cevaplandi, Çözüldü, Kapalı, Bana Atanan |
+| **Tablolar** | Kullanıcı listesi | Bekleyen talepler, Son talepler, Kategoriye göre dağılım |
+
+---
+
 ## 🏗️ Kayıt Sistemi Tasarımı (Endüstri Standardı)
 
 ### Araştırma Bulguları
@@ -389,21 +404,25 @@ public class TicketFilterViewModel
 **Views**
 Dosyalar: `Views/Support/` klasörü
 
-**Dashboard.cshtml**
-- İstatistik kartları (toplam, açık, cevaplandi, çözüldü, kapalı, bana atanan)
-- Acil talepler tablosu (Yüksek öncelik, Açık status)
-- Son eklenen talepler
+**Dashboard.cshtml** - Support Ekibi Panosu
+- **İstatistik Kartları** (toplam, açık, cevaplandi, çözüldü, kapalı, bana atanan)
+- **Bekleyen Talepler Tablosu** (atanmamış + acil talepler - Yüksek öncelik, Açık status)
+- **Son Eklenen Talepler** (son 5 talep)
+- **Kategoriye Göre Dağılım** (mini chart veya tablo)
+- **Amaç**: Destek ekibine hızlı bakış - neleri yapması gerekiyor, acil neler var
 
-**Index.cshtml**
+**Index.cshtml** - Talepleri Yönet
 - Filtreleme UI (arama, durum, kategori, öncelik, atanma durumu)
 - Ticket tablosu: Başlık, Müşteri, Kategori, Durum, Öncelik, Atanan, Oluşturma tarihi
 - Eylem butonu: Atayı (assign), Atamadan çık (unassign), Detayları gör (details)
 - Sayfalandırma
+- **Amaç**: Tüm talepleri filtreleyip yönetmek
 
-**AssignedToMe.cshtml**
+**AssignedToMe.cshtml** - Kişisel Taleplerim
 - Bana atanan ticket'ların listesi
 - Durum filtresine göre gruplandırılmış (Açık, Cevaplandi, Çözüldü, Kapalı)
 - Her ticket için: Başlık, Müşteri, Kategori, Detayları gör
+- **Amaç**: Sadece bana atanan talepleri hızlıca görmek
 
 ---
 
