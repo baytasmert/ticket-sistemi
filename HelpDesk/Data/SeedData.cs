@@ -43,5 +43,24 @@ namespace HelpDesk.Data
                 }
             }
         }
+
+        public static async Task SeedCategoriesAsync(IServiceProvider serviceProvider)
+        {
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+
+            if (context.Categories.Any()) return;
+
+            var defaultCategories = new[]
+            {
+                new Category { Ad = "Teknik Sorun", AktifMi = true },
+                new Category { Ad = "Fatura & Ödeme", AktifMi = true },
+                new Category { Ad = "Hesap & Erişim", AktifMi = true },
+                new Category { Ad = "Genel Bilgi Talebi", AktifMi = true },
+                new Category { Ad = "Diğer", AktifMi = true }
+            };
+
+            context.Categories.AddRange(defaultCategories);
+            await context.SaveChangesAsync();
+        }
     }
 }

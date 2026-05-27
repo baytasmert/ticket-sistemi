@@ -1,0 +1,85 @@
+@model List<HelpDesk.Models.Ticket>
+
+@{
+    ViewData["Title"] = "Tüm Talepler";
+    var seciliDurum = ViewBag.SeciliDurum as string;
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <div class="col-md-9">
+            <h2 class="mb-4">Tüm Talepler</h2>
+
+            <div class="mb-3">
+                <div class="btn-group" role="group">
+                    <a asp-action="AllTickets" class="btn btn-outline-secondary @(seciliDurum == null ? "active" : "")">Tümü</a>
+                    <a asp-action="AllTickets" asp-route-durum="Açık" class="btn btn-outline-primary @(seciliDurum == "Açık" ? "active" : "")">Açık</a>
+                    <a asp-action="AllTickets" asp-route-durum="İşlemde" class="btn btn-outline-warning @(seciliDurum == "İşlemde" ? "active" : "")">İşlemde</a>
+                    <a asp-action="AllTickets" asp-route-durum="Çözüldü" class="btn btn-outline-success @(seciliDurum == "Çözüldü" ? "active" : "")">Çözüldü</a>
+                    <a asp-action="AllTickets" asp-route-durum="Kapatıldı" class="btn btn-outline-dark @(seciliDurum == "Kapatıldı" ? "active" : "")">Kapatıldı</a>
+                </div>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">Bu durumda talep bulunamadı.</div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Başlık</th>
+                                        <th>Müşteri</th>
+                                        <th>Kategori</th>
+                                        <th>Durum</th>
+                                        <th>Öncelik</th>
+                                        <th>Atanan</th>
+                                        <th>Tarih</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ticket in Model)
+                                    {
+                                        var durumBadge = ticket.Durum switch
+                                        {
+                                            HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
+                                            HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
+                                            HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
+                                            HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
+                                            _ => "bg-secondary"
+                                        };
+                                        var oncelikBadge = ticket.Oncelik switch
+                                        {
+                                            HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
+                                            HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
+                                            HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
+                                            HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        <tr>
+                                            <td class="text-muted small">@ticket.Id</td>
+                                            <td class="fw-semibold">@ticket.Baslik</td>
+                                            <td>@ticket.Musteri?.AdSoyad</td>
+                                            <td>@ticket.Category?.Ad</td>
+                                            <td><span class="badge @durumBadge">@ticket.Durum</span></td>
+                                            <td><span class="badge @oncelikBadge">@ticket.Oncelik</span></td>
+                                            <td>@(ticket.AtananAjan?.AdSoyad ?? "—")</td>
+                                            <td class="text-muted small">@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
