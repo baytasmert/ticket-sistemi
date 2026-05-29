@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using HelpDesk.Models;
 using HelpDesk.ViewModels;
 using HelpDesk.Data;
@@ -303,6 +304,105 @@ namespace HelpDesk.Controllers
             await _userManager.AddToRoleAsync(user, model.Rol);
             TempData["Success"] = $"{model.Email} kullanıcısı '{model.Rol}' rolüyle oluşturuldu.";
             return RedirectToAction("Index");
+        }
+
+        // GET /Admin/Categories
+        [HttpGet]
+        public async Task<IActionResult> Categories()
+        {
+            var categories = await _context.Categories
+                .Include(c => c.Tickets)
+                .OrderBy(c => c.Ad)
+                .ToListAsync();
+            return View(categories);
+        }
+
+        // GET /Admin/CreateCategory
+        [HttpGet]
+        public IActionResult CreateCategory()
+        {
+            return View(new CategoryViewModel());
+        }
+
+        // POST /Admin/CreateCategory
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateCategory(CategoryViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var category = new Category
+            {
+                Ad = model.Ad,
+                AktifMi = model.AktifMi
+            };
+
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"'{category.Ad}' kategorisi oluşturuldu.";
+            return RedirectToAction(nameof(Categories));
+        }
+
+        // POST /Admin/ToggleCategory
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleCategory(int categoryId)
+        {
+            var category = await _context.Categories.FindAsync(categoryId);
+            if (category == null) return NotFound();
+
+            category.AktifMi = !category.AktifMi;
+            await _context.SaveChangesAsync();
+
+            var durum = category.AktifMi ? "aktif" : "pasif";
+            TempData["Success"] = $"'{category.Ad}' kategorisi {durum} yapıldı.";
+            return RedirectToAction(nameof(Categories));
+        }
+
+        // POST /Admin/DeleteCategory
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCategory(int categoryId)
+        {
+            var category = await _context.Categories
+                .Include(c => c.Tickets)
+                .FirstOrDefaultAsync(c => c.Id == categoryId);
+
+            if (category == null) return NotFound();
+
+            if (category.Tickets.Any())
+            {
+                TempData["Error"] = $"'{category.Ad}' kategorisi silinemiyor — bağlı talepler mevcut.";
+                return RedirectToAction(nameof(Categories));
+            }
+
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"'{category.Ad}' kategorisi silindi.";
+            return RedirectToAction(nameof(Categories));
+        }
+
+        // GET /Admin/AllTickets
+        [HttpGet]
+        public async Task<IActionResult> AllTickets(string? durum)
+        {
+            var query = _context.Tickets
+                .Include(t => t.Category)
+                .Include(t => t.Musteri)
+                .Include(t => t.AtananAjan)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(durum) && Enum.TryParse<TicketDurumu>(durum, out var parsedDurum))
+                query = query.Where(t => t.Durum == parsedDurum);
+
+            var tickets = await query
+                .OrderByDescending(t => t.OlusturmaTarihi)
+                .ToListAsync();
+
+            ViewBag.SeciliDurum = durum;
+            return View(tickets);
         }
     }
 }

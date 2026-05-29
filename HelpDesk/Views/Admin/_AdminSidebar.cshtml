@@ -20,6 +20,12 @@
                     }
                 }
             </a>
+            <a asp-action="Categories" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["action"]?.ToString() is "Categories" or "CreateCategory" ? "active" : "")">
+                <i class="bi bi-tags"></i> Kategoriler
+            </a>
+            <a asp-action="AllTickets" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["action"]?.ToString() == "AllTickets" ? "active" : "")">
+                <i class="bi bi-ticket-detailed"></i> Tüm Talepler
+            </a>
         </div>
     </div>
 </div>
