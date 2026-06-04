@@ -26,6 +26,8 @@ namespace HelpDesk.Controllers
         {
             var allUsers = _userManager.Users.ToList();
             var feedbacks = _context.Feedbacks.ToList();
+            var tickets = _context.Tickets.ToList();
+            var simdi = DateTime.Now;
 
             var stats = new Dictionary<string, int>
             {
@@ -34,7 +36,14 @@ namespace HelpDesk.Controllers
                 { "ToplamDestek", 0 },
                 { "ToplamAdmin", 0 },
                 { "OkunmamisFeedback", feedbacks.Count(f => !f.Okundu) },
-                { "ToplamFeedback", feedbacks.Count }
+                { "ToplamFeedback", feedbacks.Count },
+                // Bu ay açılan talepler
+                { "BuAyAcilan", tickets.Count(t =>
+                    t.OlusturmaTarihi.Year == simdi.Year && t.OlusturmaTarihi.Month == simdi.Month) },
+                // Bu ay tamamlanan (çözüldü/kapatıldı) talepler
+                { "BuAyTamamlanan", tickets.Count(t =>
+                    (t.Durum == TicketDurumu.Çözüldü || t.Durum == TicketDurumu.Kapatıldı) &&
+                    t.GuncellenmeTarihi.Year == simdi.Year && t.GuncellenmeTarihi.Month == simdi.Month) }
             };
 
             foreach (var u in allUsers)
