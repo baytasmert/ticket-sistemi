@@ -11,7 +11,6 @@ namespace HelpDesk.Data
         {
         }
 
-        public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketReply> TicketReplies { get; set; }
         public DbSet<Category> Categories { get; set; }

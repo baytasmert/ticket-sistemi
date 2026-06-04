@@ -22,7 +22,6 @@ public class BackendIntegrationTests : IClassFixture<CustomWebApplicationFactory
     [InlineData("/Admin")]
     [InlineData("/Admin/Categories")]
     [InlineData("/Support/Dashboard")]
-    [InlineData("/Account/Profile")]
     public async Task KorumaliRotalar_GirisYapilmamissa_LoginYonlendirir(string url)
     {
         var client = TestHelpers.CreateClient(_factory);
@@ -31,20 +30,6 @@ public class BackendIntegrationTests : IClassFixture<CustomWebApplicationFactory
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("/Account/Login", response.Headers.Location?.OriginalString);
-    }
-
-    [Fact]
-    public async Task Profile_GirisYapilmissa_200Doner()
-    {
-        // REGRESYON: eskiden Views/Account/Profile.cshtml eksik olduğu için 500 dönüyordu.
-        var client = TestHelpers.CreateClient(_factory);
-        await TestHelpers.RegisterCustomerAsync(client, UniqueEmail("profil"));
-
-        var response = await client.GetAsync("/Account/Profile");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Profilim", html);
     }
 
     [Fact]

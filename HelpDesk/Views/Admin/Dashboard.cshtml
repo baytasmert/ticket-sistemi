@@ -82,30 +82,9 @@
         </div>
     </div>
 
-            <!-- Geri Bildirimler ve Talep Metrikleri -->
+            <!-- Talep Metrikleri -->
             <div class="row mb-5">
-        <div class="col-md-6 mb-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Geri Bildirimler</h5>
-                    <a asp-action="Feedbacks" class="btn btn-sm btn-outline-primary">Tümünü Görüntüle</a>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Toplam</p>
-                            <h4 class="fw-bold">@ViewBag.Stats["ToplamFeedback"]</h4>
-                        </div>
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Okunmamış</p>
-                            <h4 class="fw-bold text-warning">@ViewBag.Stats["OkunmamisFeedback"]</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-3">
+        <div class="col-md-12 mb-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light border-0">
                     <h5 class="mb-0">Ticket Sistem Metrikleri</h5>

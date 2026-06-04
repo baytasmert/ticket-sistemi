@@ -25,7 +25,6 @@ namespace HelpDesk.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var allUsers = _userManager.Users.ToList();
-            var feedbacks = _context.Feedbacks.ToList();
             var tickets = _context.Tickets.ToList();
             var simdi = DateTime.Now;
 
@@ -35,8 +34,6 @@ namespace HelpDesk.Controllers
                 { "ToplamMusteri", 0 },
                 { "ToplamDestek", 0 },
                 { "ToplamAdmin", 0 },
-                { "OkunmamisFeedback", feedbacks.Count(f => !f.Okundu) },
-                { "ToplamFeedback", feedbacks.Count },
                 // Bu ay açılan talepler
                 { "BuAyAcilan", tickets.Count(t =>
                     t.OlusturmaTarihi.Year == simdi.Year && t.OlusturmaTarihi.Month == simdi.Month) },
@@ -193,41 +190,6 @@ namespace HelpDesk.Controllers
 
             TempData["Success"] = $"{email} kullanıcısı silindi.";
             return RedirectToAction("Index");
-        }
-
-        [HttpGet]
-        public IActionResult Feedbacks()
-        {
-            var feedbacks = _context.Feedbacks.OrderByDescending(f => f.CreatedAt).ToList();
-            return View(feedbacks);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkAsRead(int feedbackId)
-        {
-            var feedback = await _context.Feedbacks.FindAsync(feedbackId);
-            if (feedback == null) return NotFound();
-
-            feedback.Okundu = !feedback.Okundu;
-            _context.Feedbacks.Update(feedback);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Feedbacks");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteFeedback(int feedbackId)
-        {
-            var feedback = await _context.Feedbacks.FindAsync(feedbackId);
-            if (feedback == null) return NotFound();
-
-            _context.Feedbacks.Remove(feedback);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Geri bildirim silindi.";
-            return RedirectToAction("Feedbacks");
         }
 
         [HttpGet]

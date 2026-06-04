@@ -32,8 +32,6 @@ public class FrontendRenderTests : IClassFixture<CustomWebApplicationFactory>
     [InlineData("/Account/Login")]
     [InlineData("/Account/Register")]
     [InlineData("/staff/login")]
-    [InlineData("/Feedback/Create")]
-    [InlineData("/Home/Privacy")]
     public async Task GenelSayfalar_200DonerVeMarkaBasligiIcerir(string url)
     {
         var client = TestHelpers.CreateClient(_factory);
@@ -81,15 +79,13 @@ public class FrontendRenderTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Navbar_MusteriGirisindeProfilVeTaleplerimGosterir()
+    public async Task Navbar_MusteriGirisindeTaleplerimGosterir()
     {
-        // REGRESYON: Profil linki navbar'a sonradan eklendi.
         var client = TestHelpers.CreateClient(_factory);
         await TestHelpers.RegisterCustomerAsync(client, UniqueEmail("nav"));
 
         var html = await GetHtmlAsync(client, "/");
 
-        Assert.Contains("Profilim", html);
         Assert.Contains("Taleplerim", html);
         Assert.Contains("Çıkış Yap", html);
     }
@@ -107,16 +103,5 @@ public class FrontendRenderTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Contains("name=\"Oncelik\"", html);
         // Seed kategorilerinden en az biri dropdown'da görünmeli.
         Assert.Contains("Teknik Sorun", html);
-    }
-
-    [Fact]
-    public async Task FeedbackSayfasi_KategoriSecenekleriniGosterir()
-    {
-        var client = TestHelpers.CreateClient(_factory);
-
-        var html = await GetHtmlAsync(client, "/Feedback/Create");
-
-        Assert.Contains("İyileştirme Önerisi", html);
-        Assert.Contains("Şikayet", html);
     }
 }

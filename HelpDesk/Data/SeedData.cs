@@ -80,6 +80,7 @@ namespace HelpDesk.Data
                 new Category { Ad = "Fatura & Ödeme", AktifMi = true },
                 new Category { Ad = "Hesap & Erişim", AktifMi = true },
                 new Category { Ad = "Genel Bilgi Talebi", AktifMi = true },
+                new Category { Ad = "Geri Bildirim / Öneri", AktifMi = true },
                 new Category { Ad = "Diğer", AktifMi = true }
             };
 
