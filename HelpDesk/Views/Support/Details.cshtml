@@ -19,7 +19,8 @@
                     <i class="bi bi-arrow-left me-1"></i>Taleplere Dön
                 </a>
                 <div class="d-flex gap-2 flex-wrap">
-                    @if (!isBanaAtanmis)
+                    @* Admin saf yöneticidir, talep üstlenmez; üstlenme yalnızca destek temsilcisine açıktır. *@
+                    @if (!isBanaAtanmis && !User.IsInRole("Admin"))
                     {
                         <form asp-action="AssignTicket" asp-route-id="@Model.Ticket.Id" method="post">
                             @Html.AntiForgeryToken()

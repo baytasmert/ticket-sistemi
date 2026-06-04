@@ -67,15 +67,19 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-4 col-lg-2 mb-3">
-                    <div class="card border-0 shadow-sm h-100 stat-card border-start border-info border-3">
-                        <div class="card-body text-center py-3">
-                            <div class="stat-icon text-info mb-1"><i class="bi bi-person-check"></i></div>
-                            <h3 class="fw-bold mb-0 text-info">@Model.BanaAtanan</h3>
-                            <div class="text-muted small">Bana Atanan</div>
+                @* "Bana Atanan" sayacı talep üstlenen destek temsilcileri içindir; admin'e gösterilmez. *@
+                @if (!User.IsInRole("Admin"))
+                {
+                    <div class="col-6 col-md-4 col-lg-2 mb-3">
+                        <div class="card border-0 shadow-sm h-100 stat-card border-start border-info border-3">
+                            <div class="card-body text-center py-3">
+                                <div class="stat-icon text-info mb-1"><i class="bi bi-person-check"></i></div>
+                                <h3 class="fw-bold mb-0 text-info">@Model.BanaAtanan</h3>
+                                <div class="text-muted small">Bana Atanan</div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             </div>
 
             <div class="row">
