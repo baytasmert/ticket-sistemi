@@ -8,6 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Database konfigürasyonu
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=helpdesk.db";
+
+// Azure App Service'te SQLite dosyası varsayılan olarak wwwroot içinde oluşur ve
+// her deploy'da wwwroot baştan yazıldığı için silinir (tüm kullanıcı/talep verisi gider).
+// Bu yüzden Azure'da DB'yi deploy'un dokunmadığı kalıcı klasöre (D:\home\data) taşıyoruz.
+// WEBSITE_SITE_NAME yalnızca Azure App Service'te tanımlıdır; lokal geliştirme etkilenmez.
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")))
+{
+    var dataDir = Path.Combine(Environment.GetEnvironmentVariable("HOME") ?? "/home", "data");
+    Directory.CreateDirectory(dataDir);
+    connectionString = $"Data Source={Path.Combine(dataDir, "helpdesk.db")}";
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 
