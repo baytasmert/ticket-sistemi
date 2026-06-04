@@ -168,7 +168,19 @@ namespace HelpDesk.Controllers
             if (user == null) return NotFound();
 
             var email = user.Email;
-            await _userManager.DeleteAsync(user);
+
+            if (_context.Tickets.Any(t => t.MusteriId == userId || t.AtananAjanId == userId))
+            {
+                TempData["Error"] = $"{email} kullanıcısı silinemiyor — kullanıcıya bağlı talepler mevcut.";
+                return RedirectToAction("Index");
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["Error"] = $"{email} kullanıcısı silinemedi.";
+                return RedirectToAction("Index");
+            }
 
             TempData["Success"] = $"{email} kullanıcısı silindi.";
             return RedirectToAction("Index");

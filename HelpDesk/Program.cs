@@ -66,3 +66,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Entegrasyon testlerinin (WebApplicationFactory) uygulamayı başlatabilmesi için
+// Program sınıfını public partial olarak açığa çıkarıyoruz.
+public partial class Program { }

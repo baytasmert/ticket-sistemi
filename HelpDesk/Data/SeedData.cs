@@ -42,6 +42,30 @@ namespace HelpDesk.Data
                     await userManager.AddToRoleAsync(newAdmin, "Admin");
                 }
             }
+
+            var supportEmail = "support@helpdesk.com";
+            var supportUser = await userManager.FindByEmailAsync(supportEmail);
+
+            if (supportUser == null)
+            {
+                var newSupport = new ApplicationUser
+                {
+                    UserName = supportEmail,
+                    Email = supportEmail,
+                    AdSoyad = "Destek Personeli",
+                    Telefon = "",
+                    Departman = "Teknik Destek",
+                    AktifMi = true,
+                    EmailConfirmed = true
+                };
+
+                var result = await userManager.CreateAsync(newSupport, "Support123!");
+
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newSupport, "SupportAgent");
+                }
+            }
         }
 
         public static async Task SeedCategoriesAsync(IServiceProvider serviceProvider)

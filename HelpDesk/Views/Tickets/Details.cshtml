@@ -41,6 +41,16 @@
                 }
                 <span class="badge @durumBadge">@Model.Ticket.Durum</span>
                 <span class="badge @oncelikBadge">@Model.Ticket.Oncelik</span>
+                @if (!kapatildi)
+                {
+                    <form asp-action="Close" asp-route-id="@Model.Ticket.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Bu talebi kapatmak istediğinize emin misiniz?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-check2-circle me-1"></i>Talebi Kapat
+                        </button>
+                    </form>
+                }
             </div>
         </div>
         <div class="card-body">

@@ -143,6 +143,28 @@ namespace HelpDesk.Controllers
             return RedirectToAction(nameof(Details), new { id = model.TicketId });
         }
 
+        // POST /Tickets/Close — müşteri kendi talebini kapatır
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Close(int id)
+        {
+            var userId = _userManager.GetUserId(User)!;
+            var ticket = await _context.Tickets
+                .FirstOrDefaultAsync(t => t.Id == id && t.MusteriId == userId);
+
+            if (ticket == null) return NotFound();
+
+            if (ticket.Durum != TicketDurumu.Kapatıldı)
+            {
+                ticket.Durum = TicketDurumu.Kapatıldı;
+                ticket.GuncellenmeTarihi = DateTime.Now;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Talebiniz kapatıldı.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
         private async Task<List<SelectListItem>> GetKategoriListesiAsync()
         {
             return await _context.Categories
