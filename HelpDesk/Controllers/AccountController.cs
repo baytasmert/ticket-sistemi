@@ -149,42 +149,5 @@ namespace HelpDesk.Controllers
         {
             return View();
         }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> Profile()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var model = new ProfileViewModel
-            {
-                AdSoyad = user.AdSoyad,
-                Telefon = user.Telefon,
-                Email = user.Email ?? "",
-                Rol = roles.FirstOrDefault() ?? "Bilinmiyor"
-            };
-
-            return View(model);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Profile(ProfileViewModel model)
-        {
-            if (!ModelState.IsValid) return View(model);
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
-
-            user.AdSoyad = model.AdSoyad;
-            user.Telefon = model.Telefon;
-            await _userManager.UpdateAsync(user);
-
-            TempData["Success"] = "Profil başarıyla güncellendi.";
-            return RedirectToAction("Profile");
-        }
     }
 }
