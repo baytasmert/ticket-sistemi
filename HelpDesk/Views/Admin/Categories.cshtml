@@ -1,0 +1,84 @@
+@model List<HelpDesk.Models.Category>
+
+@{
+    ViewData["Title"] = "Kategoriler";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Kategoriler</h2>
+                <a asp-action="CreateCategory" class="btn btn-primary">+ Yeni Kategori</a>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Kategori Adı</th>
+                                <th>Durum</th>
+                                <th>Talep Sayısı</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cat in Model)
+                            {
+                                <tr>
+                                    <td class="text-muted small">@cat.Id</td>
+                                    <td class="fw-semibold">@cat.Ad</td>
+                                    <td>
+                                        @if (cat.AktifMi)
+                                        {
+                                            <span class="badge bg-success">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Pasif</span>
+                                        }
+                                    </td>
+                                    <td>@cat.Tickets.Count</td>
+                                    <td>
+                                        <form asp-action="ToggleCategory" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="categoryId" value="@cat.Id" />
+                                            <button type="submit" class="btn btn-sm @(cat.AktifMi ? "btn-outline-warning" : "btn-outline-success")">
+                                                @(cat.AktifMi ? "Pasifleştir" : "Aktifleştir")
+                                            </button>
+                                        </form>
+                                        <form asp-action="DeleteCategory" method="post" class="d-inline"
+                                              onsubmit="return confirm('@cat.Ad kategorisini silmek istediğinize emin misiniz?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="categoryId" value="@cat.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

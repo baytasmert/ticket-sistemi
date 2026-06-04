@@ -1,9 +1,168 @@
+@model List<HelpDesk.Models.Ticket>
 @{
-    ViewData["Title"] = "Talepler";
+    ViewData["Title"] = "Tüm Talepler";
+    var seciliDurum = ViewBag.SeciliDurum as string;
+    var seciliOncelik = ViewBag.SeciliOncelik as string;
+    var arama = ViewBag.Arama as string;
 }
 
-<h2>Destek Paneli - Talepler</h2>
-<hr />
+<div class="container-fluid py-4">
+    <div class="row">
+        @await Html.PartialAsync("_SupportSidebar")
 
-<!-- İçerik Kişi 2 tarafından doldurulacak -->
-<!-- Beklenen: Filtreleme (arama, durum, kategori, öncelik), ticket tablosu -->
+        <div class="col-md-9">
+            @await Html.PartialAsync("_AlertPartial")
+
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-0">Tüm Talepler</h2>
+                    <p class="text-muted mb-0">@Model.Count talep listeleniyor</p>
+                </div>
+            </div>
+
+            <!-- Filtre Formu -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" asp-action="Index" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">
+                                <i class="bi bi-search me-1"></i>Arama
+                            </label>
+                            <input type="text" name="arama" value="@arama" class="form-control"
+                                   placeholder="Başlık, açıklama veya müşteri adı..." />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold text-muted">Durum</label>
+                            <select name="durum" class="form-select">
+                                <option value="">Tümü</option>
+                                <option value="Açık" selected="@(seciliDurum == "Açık" ? "selected" : null)">Açık</option>
+                                <option value="İşlemde" selected="@(seciliDurum == "İşlemde" ? "selected" : null)">İşlemde</option>
+                                <option value="Çözüldü" selected="@(seciliDurum == "Çözüldü" ? "selected" : null)">Çözüldü</option>
+                                <option value="Kapatıldı" selected="@(seciliDurum == "Kapatıldı" ? "selected" : null)">Kapatıldı</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold text-muted">Kategori</label>
+                            <select name="kategoriId" class="form-select" asp-items="ViewBag.Kategoriler">
+                                <option value="">Tümü</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold text-muted">Öncelik</label>
+                            <select name="oncelik" class="form-select">
+                                <option value="">Tümü</option>
+                                <option value="Düşük" selected="@(seciliOncelik == "Düşük" ? "selected" : null)">Düşük</option>
+                                <option value="Orta" selected="@(seciliOncelik == "Orta" ? "selected" : null)">Orta</option>
+                                <option value="Yüksek" selected="@(seciliOncelik == "Yüksek" ? "selected" : null)">Yüksek</option>
+                                <option value="Kritik" selected="@(seciliOncelik == "Kritik" ? "selected" : null)">Kritik</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="bi bi-funnel"></i> Filtrele
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary" title="Temizle">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Aktif Filtreler -->
+            @if (!string.IsNullOrWhiteSpace(arama) || !string.IsNullOrWhiteSpace(seciliDurum) || !string.IsNullOrWhiteSpace(seciliOncelik))
+            {
+                <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+                    <small class="text-muted">Aktif filtreler:</small>
+                    @if (!string.IsNullOrWhiteSpace(arama))
+                    {
+                        <span class="badge bg-light text-dark border">Arama: "@arama"</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(seciliDurum))
+                    {
+                        <span class="badge bg-light text-dark border">Durum: @seciliDurum</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(seciliOncelik))
+                    {
+                        <span class="badge bg-light text-dark border">Öncelik: @seciliOncelik</span>
+                    }
+                </div>
+            }
+
+            <!-- Talep Tablosu -->
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Belirtilen kriterlere uygun talep bulunamadı.
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-muted">#</th>
+                                        <th>Başlık</th>
+                                        <th>Müşteri</th>
+                                        <th>Kategori</th>
+                                        <th>Durum</th>
+                                        <th>Öncelik</th>
+                                        <th>Atanan</th>
+                                        <th>Tarih</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ticket in Model)
+                                    {
+                                        var durumBadge = ticket.Durum switch
+                                        {
+                                            HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
+                                            HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
+                                            HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
+                                            HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
+                                            _ => "bg-secondary"
+                                        };
+                                        var oncelikBadge = ticket.Oncelik switch
+                                        {
+                                            HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
+                                            HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
+                                            HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
+                                            HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        <tr>
+                                            <td class="text-muted small">@ticket.Id</td>
+                                            <td>
+                                                <a asp-action="Details" asp-route-id="@ticket.Id"
+                                                   class="text-decoration-none fw-semibold">
+                                                    @ticket.Baslik
+                                                </a>
+                                            </td>
+                                            <td class="small">@ticket.Musteri?.AdSoyad</td>
+                                            <td class="small">@ticket.Category?.Ad</td>
+                                            <td><span class="badge @durumBadge">@ticket.Durum</span></td>
+                                            <td><span class="badge @oncelikBadge">@ticket.Oncelik</span></td>
+                                            <td class="small">@(ticket.AtananAjan?.AdSoyad ?? "—")</td>
+                                            <td class="text-muted small">@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy")</td>
+                                            <td>
+                                                <a asp-action="Details" asp-route-id="@ticket.Id"
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

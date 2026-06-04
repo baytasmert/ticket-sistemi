@@ -1,0 +1,102 @@
+@model List<HelpDesk.Models.Ticket>
+@{
+    ViewData["Title"] = "Taleplerim";
+    var seciliDurum = ViewBag.SeciliDurum as string;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Destek Taleplerim</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Yeni Talep</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="mb-3">
+        <div class="btn-group" role="group">
+            <a asp-action="Index" class="btn btn-outline-secondary @(seciliDurum == null ? "active" : "")">Tümü</a>
+            <a asp-action="Index" asp-route-durum="Açık" class="btn btn-outline-primary @(seciliDurum == "Açık" ? "active" : "")">Açık</a>
+            <a asp-action="Index" asp-route-durum="İşlemde" class="btn btn-outline-warning @(seciliDurum == "İşlemde" ? "active" : "")">İşlemde</a>
+            <a asp-action="Index" asp-route-durum="Çözüldü" class="btn btn-outline-success @(seciliDurum == "Çözüldü" ? "active" : "")">Çözüldü</a>
+            <a asp-action="Index" asp-route-durum="Kapatıldı" class="btn btn-outline-dark @(seciliDurum == "Kapatıldı" ? "active" : "")">Kapatıldı</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            @if (seciliDurum != null)
+            {
+                <span>Bu durumda talep bulunamadı.</span>
+            }
+            else
+            {
+                <span>Henüz destek talebi oluşturmadınız. <a asp-action="Create">İlk talebinizi oluşturun.</a></span>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Başlık</th>
+                        <th>Kategori</th>
+                        <th>Durum</th>
+                        <th>Öncelik</th>
+                        <th>Tarih</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in Model)
+                    {
+                        <tr>
+                            <td class="text-muted small">@ticket.Id</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@ticket.Id" class="text-decoration-none fw-semibold">
+                                    @ticket.Baslik
+                                </a>
+                            </td>
+                            <td>@ticket.Category?.Ad</td>
+                            <td>
+                                @{
+                                    var durumBadge = ticket.Durum switch
+                                    {
+                                        HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
+                                        HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
+                                        HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
+                                        HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @durumBadge">@ticket.Durum</span>
+                            </td>
+                            <td>
+                                @{
+                                    var oncelikBadge = ticket.Oncelik switch
+                                    {
+                                        HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
+                                        HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
+                                        HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
+                                        HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @oncelikBadge">@ticket.Oncelik</span>
+                            </td>
+                            <td class="text-muted small">@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
