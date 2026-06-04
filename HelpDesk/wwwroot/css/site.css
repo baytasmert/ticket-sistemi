@@ -184,3 +184,61 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── Support & Admin genel kart stili ── */
+.stat-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.stat-icon {
+  font-size: 1.6rem;
+  opacity: 0.7;
+}
+
+/* Ticket açıklama metni */
+.ticket-aciklama {
+  line-height: 1.7;
+  color: #333;
+}
+
+/* Sidebar aktif link belirginleştirme */
+.list-group-item.active {
+  font-weight: 600;
+}
+
+/* Navbar brand ikonlu görünüm için küçük tweak */
+.navbar-brand {
+  letter-spacing: -0.5px;
+  font-size: 1.2rem;
+}
+
+/* Progress bar animasyon (kategori dağılımı) */
+.progress-bar {
+  transition: width 0.6s ease;
+}
+
+/* Footer body gap */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.footer {
+  position: static;
+  margin-top: auto;
+  line-height: 1.5;
+}
+
+/* Responsive tablo düzeltmesi */
+@media (max-width: 576px) {
+  .btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}

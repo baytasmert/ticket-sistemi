@@ -1,0 +1,187 @@
+@model HelpDesk.ViewModels.TicketDetailsViewModel
+@{
+    ViewData["Title"] = "Talep #" + Model.Ticket.Id;
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var isAtanmis = Model.Ticket.AtananAjanId != null;
+    var isBanaAtanmis = Model.Ticket.AtananAjanId == currentUserId;
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        @await Html.PartialAsync("_SupportSidebar")
+
+        <div class="col-md-9">
+            @await Html.PartialAsync("_AlertPartial")
+
+            <!-- Başlık Satırı -->
+            <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <a asp-action="Index" class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left me-1"></i>Taleplere Dön
+                </a>
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (!isBanaAtanmis)
+                    {
+                        <form asp-action="AssignTicket" asp-route-id="@Model.Ticket.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-info text-white">
+                                <i class="bi bi-person-plus me-1"></i>
+                                @(isAtanmis ? "Talebi Bana Al" : "Talebi Üstlen")
+                            </button>
+                        </form>
+                    }
+                    <form asp-action="UpdateStatus" method="post" class="d-flex gap-1 align-items-center">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Ticket.Id" />
+                        <select name="durum" class="form-select form-select-sm" style="width: auto;">
+                            @foreach (var d in Enum.GetValues<HelpDesk.Models.TicketDurumu>())
+                            {
+                                <option value="@d" selected="@(Model.Ticket.Durum == d ? "selected" : null)">@d</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">
+                            <i class="bi bi-pencil"></i> Güncelle
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Talep Bilgileri Kartı -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-start gap-2">
+                    <h4 class="mb-0 fw-bold">@Model.Ticket.Baslik</h4>
+                    <div class="d-flex gap-2 flex-shrink-0">
+                        @{
+                            var durumBadge = Model.Ticket.Durum switch
+                            {
+                                HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
+                                HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
+                                HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
+                                HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
+                                _ => "bg-secondary"
+                            };
+                            var oncelikBadge = Model.Ticket.Oncelik switch
+                            {
+                                HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
+                                HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
+                                HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
+                                HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @durumBadge fs-6">@Model.Ticket.Durum</span>
+                        <span class="badge @oncelikBadge fs-6">@Model.Ticket.Oncelik</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-muted small mb-3 g-2">
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-dark">Kategori</div>
+                            @Model.Ticket.Category?.Ad
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-dark">Müşteri</div>
+                            @Model.Ticket.Musteri?.AdSoyad
+                            <div class="text-muted">@Model.Ticket.Musteri?.Email</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-dark">Oluşturulma</div>
+                            @Model.Ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-dark">Atanan Ajan</div>
+                            @if (isBanaAtanmis)
+                            {
+                                <span class="text-success fw-semibold">
+                                    <i class="bi bi-person-check me-1"></i>Siz
+                                </span>
+                            }
+                            else if (Model.Ticket.AtananAjan != null)
+                            {
+                                @Model.Ticket.AtananAjan.AdSoyad
+                            }
+                            else
+                            {
+                                <span class="text-danger">Atanmamış</span>
+                            }
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="ticket-aciklama" style="white-space: pre-wrap;">@Model.Ticket.Aciklama</div>
+                </div>
+            </div>
+
+            <!-- Yanıtlar -->
+            <h5 class="mb-3">
+                <i class="bi bi-chat-dots me-2"></i>Yanıtlar
+                <span class="badge bg-secondary ms-1">@Model.Yanitlar.Count</span>
+            </h5>
+
+            @if (!Model.Yanitlar.Any())
+            {
+                <div class="text-muted mb-4 fst-italic">Henüz yanıt yok.</div>
+            }
+            else
+            {
+                @foreach (var yanit in Model.Yanitlar)
+                {
+                    var isMüşteri = yanit.YazarId == Model.Ticket.MusteriId;
+                    var cardBorder = isMüşteri
+                        ? "border-start border-primary border-3"
+                        : "border-start border-success border-3";
+                    var authorLabel = isMüşteri
+                        ? (Model.Ticket.Musteri?.AdSoyad ?? "Müşteri")
+                        : (yanit.Yazar?.AdSoyad ?? "Destek");
+                    var roleBadge = isMüşteri ? "bg-primary" : "bg-success";
+                    var roleLabel = isMüşteri ? "Müşteri" : "Destek";
+
+                    <div class="card mb-3 @cardBorder shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge @roleBadge me-2">@roleLabel</span>
+                                    <strong>@authorLabel</strong>
+                                </div>
+                                <span class="text-muted small">@yanit.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</span>
+                            </div>
+                            <div style="white-space: pre-wrap;">@yanit.Mesaj</div>
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- Yanıt Formu -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-reply me-2"></i>Yanıt Ekle</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddReply" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketId" value="@Model.Ticket.Id" />
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Yanıtınız <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="mesaj" class="form-control" rows="5" required maxlength="5000"
+                                      placeholder="Müşteriye yanıtınızı yazın..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Yanıt Sonrası Durum</label>
+                            <select name="yeniDurum" class="form-select" style="max-width: 280px;">
+                                <option value="">— Durumu değiştirme —</option>
+                                @foreach (var d in Enum.GetValues<HelpDesk.Models.TicketDurumu>())
+                                {
+                                    <option value="@d" selected="@(Model.Ticket.Durum == d ? "selected" : null)">@d</option>
+                                }
+                            </select>
+                            <div class="form-text">Yanıt gönderirken durumu da değiştirmek için seçin.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i> Yanıt Gönder
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

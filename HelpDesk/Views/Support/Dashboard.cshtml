@@ -1,9 +1,185 @@
+@model HelpDesk.ViewModels.SupportDashboardViewModel
 @{
     ViewData["Title"] = "Destek Paneli";
 }
 
-<h2>Destek Paneli - Dashboard</h2>
-<hr />
+<div class="container-fluid py-4">
+    <div class="row">
+        @await Html.PartialAsync("_SupportSidebar")
 
-<!-- İçerik Kişi 2 tarafından doldurulacak -->
-<!-- Beklenen: İstatistik kartları, bekleyen talepler tablosu, filtreler -->
+        <div class="col-md-9">
+            @await Html.PartialAsync("_AlertPartial")
+
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold mb-0">Dashboard</h1>
+                    <p class="text-muted mb-0">Destek ekibi yönetim panosu</p>
+                </div>
+                <a asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-list-ul me-1"></i> Tüm Talepler
+                </a>
+            </div>
+
+            <!-- İstatistik Kartları -->
+            <div class="row mb-4">
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center py-3">
+                            <div class="stat-icon text-secondary mb-1"><i class="bi bi-collection"></i></div>
+                            <h3 class="fw-bold mb-0">@Model.ToplamTalep</h3>
+                            <div class="text-muted small">Toplam</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center py-3">
+                            <div class="stat-icon text-primary mb-1"><i class="bi bi-envelope-open"></i></div>
+                            <h3 class="fw-bold mb-0 text-primary">@Model.AcikTalep</h3>
+                            <div class="text-muted small">Açık</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center py-3">
+                            <div class="stat-icon text-warning mb-1"><i class="bi bi-arrow-repeat"></i></div>
+                            <h3 class="fw-bold mb-0 text-warning">@Model.IslemdeTalep</h3>
+                            <div class="text-muted small">İşlemde</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center py-3">
+                            <div class="stat-icon text-success mb-1"><i class="bi bi-check-circle"></i></div>
+                            <h3 class="fw-bold mb-0 text-success">@Model.CozulduTalep</h3>
+                            <div class="text-muted small">Çözüldü</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center py-3">
+                            <div class="stat-icon text-secondary mb-1"><i class="bi bi-archive"></i></div>
+                            <h3 class="fw-bold mb-0 text-secondary">@Model.KapatildiTalep</h3>
+                            <div class="text-muted small">Kapatıldı</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card border-start border-info border-3">
+                        <div class="card-body text-center py-3">
+                            <div class="stat-icon text-info mb-1"><i class="bi bi-person-check"></i></div>
+                            <h3 class="fw-bold mb-0 text-info">@Model.BanaAtanan</h3>
+                            <div class="text-muted small">Bana Atanan</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Bekleyen / İşlemdeki Son Talepler -->
+                <div class="col-md-8 mb-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Bekleyen Talepler</h5>
+                            <a asp-action="Index" asp-route-durum="Açık" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (!Model.SonTalepler.Any())
+                            {
+                                <div class="p-4 text-center text-muted">
+                                    <i class="bi bi-check-all fs-3 d-block mb-2"></i>
+                                    Bekleyen talep yok!
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0 align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Başlık</th>
+                                                <th>Durum</th>
+                                                <th>Öncelik</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var ticket in Model.SonTalepler)
+                                            {
+                                                var durumBadge = ticket.Durum switch
+                                                {
+                                                    HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
+                                                    HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
+                                                    _ => "bg-secondary"
+                                                };
+                                                var oncelikBadge = ticket.Oncelik switch
+                                                {
+                                                    HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
+                                                    HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
+                                                    HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
+                                                    HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
+                                                    _ => "bg-secondary"
+                                                };
+                                                <tr>
+                                                    <td class="text-muted small">@ticket.Id</td>
+                                                    <td class="fw-semibold">@ticket.Baslik</td>
+                                                    <td><span class="badge @durumBadge">@ticket.Durum</span></td>
+                                                    <td><span class="badge @oncelikBadge">@ticket.Oncelik</span></td>
+                                                    <td>
+                                                        <a asp-action="Details" asp-route-id="@ticket.Id"
+                                                           class="btn btn-sm btn-outline-secondary">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategoriye Göre Dağılım (LINQ GroupBy) -->
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0"><i class="bi bi-bar-chart-fill me-2 text-info"></i>Kategori Dağılımı</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (!Model.KategoriDagilimi.Any())
+                            {
+                                <div class="p-4 text-center text-muted">Veri yok.</div>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var item in Model.KategoriDagilimi)
+                                    {
+                                        var pct = Model.ToplamTalep > 0
+                                            ? (int)((double)item.Sayi / Model.ToplamTalep * 100)
+                                            : 0;
+                                        <li class="list-group-item px-3 py-2">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="small text-truncate me-2">@item.Kategori</span>
+                                                <span class="badge bg-primary rounded-pill">@item.Sayi</span>
+                                            </div>
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar bg-info" style="width: @pct%"></div>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
