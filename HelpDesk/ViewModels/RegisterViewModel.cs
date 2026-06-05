@@ -18,11 +18,11 @@ namespace HelpDesk.ViewModels
         [Display(Name = "Telefon (Opsiyonel)")]
         public string? Telefon { get; set; }
 
+        // Şifre KARMAŞIKLIK kuralları (büyük/küçük/rakam/özel karakter) tek yerde:
+        // Program.cs'teki Identity politikası. Burada yalnızca anlık istemci geri
+        // bildirimi için zorunluluk + minimum uzunluk bırakıyoruz.
         [Required(ErrorMessage = "Şifre alanı zorunludur.")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "Şifre en az 8 karakter olmalıdır.")]
-        [RegularExpression(
-            @"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
-            ErrorMessage = "Şifre: 1 büyük harf, 1 küçük harf, 1 rakam, 1 özel karakter (@$!%*?&) içermelidir.")]
         [DataType(DataType.Password)]
         [Display(Name = "Şifre")]
         public string Password { get; set; } = string.Empty;

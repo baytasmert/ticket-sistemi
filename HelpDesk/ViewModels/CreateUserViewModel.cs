@@ -18,11 +18,9 @@ namespace HelpDesk.ViewModels
         [Display(Name = "Telefon")]
         public string? Telefon { get; set; }
 
+        // Karmaşıklık kuralı tek yerde: Program.cs'teki Identity politikası.
         [Required(ErrorMessage = "Şifre zorunludur.")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "Şifre en az 8 karakter olmalıdır.")]
-        [RegularExpression(
-            @"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
-            ErrorMessage = "Şifre: 1 büyük harf, 1 küçük harf, 1 rakam, 1 özel karakter (@$!%*?&) içermelidir.")]
         [DataType(DataType.Password)]
         [Display(Name = "Şifre")]
         public string Password { get; set; } = string.Empty;

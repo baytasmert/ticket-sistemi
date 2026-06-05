@@ -1,5 +1,6 @@
 using HelpDesk.Data;
 using HelpDesk.Models;
+using HelpDesk.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,14 +25,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 
 // Identity konfigürasyonu
+// Şifre politikasının TEK yetkili yeri burası. Kullanıcı oluşturan her yol
+// (Register, Admin → CreateUser, SeedData) bu kurallara tabi olur; kural
+// ViewModel regex'leriyle tekrarlanmaz.
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Password.RequiredLength = 6;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = true;
 })
+.AddErrorDescriber<TurkishIdentityErrorDescriber>()
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 

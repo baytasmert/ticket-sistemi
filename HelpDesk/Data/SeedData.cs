@@ -35,7 +35,10 @@ namespace HelpDesk.Data
                     EmailConfirmed = true
                 };
 
-                var result = await userManager.CreateAsync(newAdmin, "Admin123!");
+                // Şifre koda gömülü DEĞİL: Azure'da App Setting (ADMIN_PASSWORD)
+                // olarak verilir; lokalde tanımlı değilse geliştirme varsayılanı kullanılır.
+                var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "Admin123!";
+                var result = await userManager.CreateAsync(newAdmin, adminPassword);
 
                 if (result.Succeeded)
                 {
@@ -59,7 +62,8 @@ namespace HelpDesk.Data
                     EmailConfirmed = true
                 };
 
-                var result = await userManager.CreateAsync(newSupport, "Support123!");
+                var supportPassword = Environment.GetEnvironmentVariable("SUPPORT_PASSWORD") ?? "Support123!";
+                var result = await userManager.CreateAsync(newSupport, supportPassword);
 
                 if (result.Succeeded)
                 {

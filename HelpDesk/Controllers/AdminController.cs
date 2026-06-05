@@ -24,16 +24,19 @@ namespace HelpDesk.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            var allUsers = _userManager.Users.ToList();
+            var toplamKullanici = _userManager.Users.Count();
             var tickets = _context.Tickets.ToList();
             var simdi = DateTime.Now;
 
+            // Rol başına TEK sorgu (N+1 yerine sabit sayıda sorgu).
+            var rolDagilimi = await GetRoleCountsAsync();
+
             var stats = new Dictionary<string, int>
             {
-                { "ToplamKullanici", allUsers.Count },
-                { "ToplamMusteri", 0 },
-                { "ToplamDestek", 0 },
-                { "ToplamAdmin", 0 },
+                { "ToplamKullanici", toplamKullanici },
+                { "ToplamMusteri", rolDagilimi["Customer"] },
+                { "ToplamDestek", rolDagilimi["SupportAgent"] },
+                { "ToplamAdmin", rolDagilimi["Admin"] },
                 // Bu ay açılan talepler
                 { "BuAyAcilan", tickets.Count(t =>
                     t.OlusturmaTarihi.Year == simdi.Year && t.OlusturmaTarihi.Month == simdi.Month) },
@@ -43,17 +46,31 @@ namespace HelpDesk.Controllers
                     t.GuncellenmeTarihi.Year == simdi.Year && t.GuncellenmeTarihi.Month == simdi.Month) }
             };
 
-            foreach (var u in allUsers)
-            {
-                var roles = await _userManager.GetRolesAsync(u);
-                var role = roles.FirstOrDefault() ?? "";
-                if (role == "Admin") stats["ToplamAdmin"]++;
-                else if (role == "SupportAgent") stats["ToplamDestek"]++;
-                else if (role == "Customer") stats["ToplamMusteri"]++;
-            }
-
             ViewBag.Stats = stats;
             return View();
+        }
+
+        // Her rol için kullanıcı sayısını rol başına tek sorgu ile döndürür.
+        // Önceki kod her kullanıcı için ayrı GetRolesAsync çağırıyordu (N+1).
+        private async Task<Dictionary<string, int>> GetRoleCountsAsync()
+        {
+            var roller = new[] { "Admin", "SupportAgent", "Customer" };
+            var sonuc = new Dictionary<string, int>();
+            foreach (var rol in roller)
+                sonuc[rol] = (await _userManager.GetUsersInRoleAsync(rol)).Count;
+            return sonuc;
+        }
+
+        // Her kullanıcının (tek) rolünü rol başına tek sorgu ile haritalar.
+        // userId -> rol adı. Yine N+1 yerine sabit sayıda sorgu.
+        private async Task<Dictionary<string, string>> GetRoleByUserIdAsync()
+        {
+            var roller = new[] { "Admin", "SupportAgent", "Customer" };
+            var harita = new Dictionary<string, string>();
+            foreach (var rol in roller)
+                foreach (var u in await _userManager.GetUsersInRoleAsync(rol))
+                    harita[u.Id] = rol;
+            return harita;
         }
 
         public async Task<IActionResult> Index(string? search)
@@ -69,37 +86,27 @@ namespace HelpDesk.Controllers
             }
 
             var users = usersQuery.ToList();
-            var userViewModels = new List<UserListViewModel>();
 
-            foreach (var user in users)
+            // userId -> rol haritası: rol başına tek sorgu (N+1 yok).
+            var rolByUserId = await GetRoleByUserIdAsync();
+
+            var userViewModels = users.Select(user => new UserListViewModel
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                userViewModels.Add(new UserListViewModel
-                {
-                    Id = user.Id,
-                    AdSoyad = user.AdSoyad,
-                    Email = user.Email ?? "",
-                    Rol = roles.FirstOrDefault() ?? "Rol Yok",
-                    AktifMi = user.AktifMi
-                });
-            }
+                Id = user.Id,
+                AdSoyad = user.AdSoyad,
+                Email = user.Email ?? "",
+                Rol = rolByUserId.TryGetValue(user.Id, out var rol) ? rol : "Rol Yok",
+                AktifMi = user.AktifMi
+            }).ToList();
 
-            var allUsers = _userManager.Users.ToList();
+            // İstatistikler aramadan bağımsız: tüm kullanıcıların rol dağılımı.
             var stats = new Dictionary<string, int>
             {
-                { "ToplamKullanici", allUsers.Count },
-                { "AdminSayisi", 0 },
-                { "SupportAgentSayisi", 0 },
-                { "CustomerSayisi", 0 }
+                { "ToplamKullanici", _userManager.Users.Count() },
+                { "AdminSayisi", rolByUserId.Values.Count(r => r == "Admin") },
+                { "SupportAgentSayisi", rolByUserId.Values.Count(r => r == "SupportAgent") },
+                { "CustomerSayisi", rolByUserId.Values.Count(r => r == "Customer") }
             };
-            foreach (var u in allUsers)
-            {
-                var r = await _userManager.GetRolesAsync(u);
-                var role = r.FirstOrDefault() ?? "";
-                if (role == "Admin") stats["AdminSayisi"]++;
-                else if (role == "SupportAgent") stats["SupportAgentSayisi"]++;
-                else if (role == "Customer") stats["CustomerSayisi"]++;
-            }
 
             ViewBag.Stats = stats;
             ViewBag.Search = search;
