@@ -1,6 +1,7 @@
 using HelpDesk.Data;
 using HelpDesk.Models;
 using HelpDesk.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,10 +48,28 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
+// Uygulama servisleri (iş mantığı katmanı).
+// LoginThrottle paylaşılan durum tuttuğu için singleton; TicketService DbContext'e
+// bağlı olduğu için request başına scoped'tır.
+builder.Services.AddSingleton<LoginThrottle>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+
+// Azure App Service gibi ters proxy arkasında istemcinin gerçek IP'sini (X-Forwarded-For)
+// ve protokolünü (X-Forwarded-Proto) elde etmek için. Aksi halde tüm istekler proxy
+// IP'sinden görünür ve IP bazlı giriş hız sınırlaması yanlış çalışır.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

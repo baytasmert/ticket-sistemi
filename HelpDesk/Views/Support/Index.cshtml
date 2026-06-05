@@ -119,36 +119,27 @@
                                 <tbody>
                                     @foreach (var ticket in Model)
                                     {
-                                        var durumBadge = ticket.Durum switch
-                                        {
-                                            HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
-                                            HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
-                                            HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
-                                            HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
-                                            _ => "bg-secondary"
-                                        };
-                                        var oncelikBadge = ticket.Oncelik switch
-                                        {
-                                            HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
-                                            HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
-                                            HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
-                                            HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
-                                            _ => "bg-secondary"
-                                        };
-                                        <tr>
+                                        var gecikmis = TicketViewHelpers.Gecikmis(ticket);
+                                        <tr class="@(gecikmis ? "table-danger" : "")">
                                             <td class="text-muted small">@ticket.Id</td>
                                             <td>
                                                 <a asp-action="Details" asp-route-id="@ticket.Id"
                                                    class="text-decoration-none fw-semibold">
                                                     @ticket.Baslik
                                                 </a>
+                                                @if (gecikmis)
+                                                {
+                                                    <span class="badge bg-danger ms-1" title="@TicketViewHelpers.SlaMetni(ticket)">
+                                                        <i class="bi bi-exclamation-triangle"></i> Gecikti
+                                                    </span>
+                                                }
                                             </td>
                                             <td class="small">@ticket.Musteri?.AdSoyad</td>
                                             <td class="small">@ticket.Category?.Ad</td>
-                                            <td><span class="badge @durumBadge">@ticket.Durum</span></td>
-                                            <td><span class="badge @oncelikBadge">@ticket.Oncelik</span></td>
+                                            <td>@TicketViewHelpers.DurumRozet(ticket.Durum)</td>
+                                            <td>@TicketViewHelpers.OncelikRozet(ticket.Oncelik)</td>
                                             <td class="small">@(ticket.AtananAjan?.AdSoyad ?? "—")</td>
-                                            <td class="text-muted small">@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy")</td>
+                                            <td class="text-muted small" title="@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")">@TicketViewHelpers.GoreceliZaman(ticket.OlusturmaTarihi)</td>
                                             <td>
                                                 <a asp-action="Details" asp-route-id="@ticket.Id"
                                                    class="btn btn-sm btn-outline-secondary">

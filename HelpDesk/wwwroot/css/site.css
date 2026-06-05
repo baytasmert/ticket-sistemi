@@ -242,3 +242,34 @@ body {
     font-size: 0.8rem;
   }
 }
+
+/* ── İşlem geçmişi zaman çizelgesi (timeline) ── */
+.ticket-timeline {
+  position: relative;
+}
+
+.ticket-timeline li {
+  position: relative;
+}
+
+/* Her öğeyi dikey bir çizgiyle bağla (son öğe hariç) */
+.ticket-timeline li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 20px;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.ticket-timeline li > div:first-child {
+  z-index: 1;
+  background: #fff;
+  line-height: 1;
+}
+
+/* Gecikmiş talep satırı vurgusu (Bootstrap table-danger ile birlikte) */
+tr.table-danger td {
+  --bs-table-bg: #fdf0f0;
+}

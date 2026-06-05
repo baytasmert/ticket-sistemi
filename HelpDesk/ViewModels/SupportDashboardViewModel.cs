@@ -16,6 +16,7 @@ namespace HelpDesk.ViewModels
         public int CozulduTalep { get; set; }
         public int KapatildiTalep { get; set; }
         public int BanaAtanan { get; set; }
+        public int AtanmamisTalep { get; set; }
         public List<KategoriSayisi> KategoriDagilimi { get; set; } = new();
         public List<Ticket> SonTalepler { get; set; } = new();
     }

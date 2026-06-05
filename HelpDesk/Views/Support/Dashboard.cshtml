@@ -67,6 +67,18 @@
                         </div>
                     </div>
                 </div>
+                @* Atanmamış açık/işlemdeki talepler: aksiyon gerektiren havuz. *@
+                <div class="col-6 col-md-4 col-lg-2 mb-3">
+                    <a asp-action="Index" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm h-100 stat-card border-start border-danger border-3">
+                            <div class="card-body text-center py-3">
+                                <div class="stat-icon text-danger mb-1"><i class="bi bi-inbox"></i></div>
+                                <h3 class="fw-bold mb-0 text-danger">@Model.AtanmamisTalep</h3>
+                                <div class="text-muted small">Atanmamış</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
                 @* "Bana Atanan" sayacı talep üstlenen destek temsilcileri içindir; admin'e gösterilmez. *@
                 @if (!User.IsInRole("Admin"))
                 {
@@ -114,25 +126,18 @@
                                         <tbody>
                                             @foreach (var ticket in Model.SonTalepler)
                                             {
-                                                var durumBadge = ticket.Durum switch
-                                                {
-                                                    HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
-                                                    HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
-                                                    _ => "bg-secondary"
-                                                };
-                                                var oncelikBadge = ticket.Oncelik switch
-                                                {
-                                                    HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
-                                                    HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
-                                                    HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
-                                                    HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
-                                                    _ => "bg-secondary"
-                                                };
-                                                <tr>
+                                                var gecikmis = TicketViewHelpers.Gecikmis(ticket);
+                                                <tr class="@(gecikmis ? "table-danger" : "")">
                                                     <td class="text-muted small">@ticket.Id</td>
-                                                    <td class="fw-semibold">@ticket.Baslik</td>
-                                                    <td><span class="badge @durumBadge">@ticket.Durum</span></td>
-                                                    <td><span class="badge @oncelikBadge">@ticket.Oncelik</span></td>
+                                                    <td class="fw-semibold">
+                                                        @ticket.Baslik
+                                                        @if (gecikmis)
+                                                        {
+                                                            <span class="badge bg-danger ms-1"><i class="bi bi-exclamation-triangle"></i></span>
+                                                        }
+                                                    </td>
+                                                    <td>@TicketViewHelpers.DurumRozet(ticket.Durum)</td>
+                                                    <td>@TicketViewHelpers.OncelikRozet(ticket.Oncelik)</td>
                                                     <td>
                                                         <a asp-action="Details" asp-route-id="@ticket.Id"
                                                            class="btn btn-sm btn-outline-secondary">

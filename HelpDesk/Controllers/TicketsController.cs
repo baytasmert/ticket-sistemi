@@ -2,9 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using HelpDesk.Data;
 using HelpDesk.Models;
+using HelpDesk.Services;
 using HelpDesk.ViewModels;
 
 namespace HelpDesk.Controllers
@@ -12,12 +11,12 @@ namespace HelpDesk.Controllers
     [Authorize(Roles = "Customer")]
     public class TicketsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ITicketService _ticketService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public TicketsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public TicketsController(ITicketService ticketService, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _ticketService = ticketService;
             _userManager = userManager;
         }
 
@@ -25,19 +24,14 @@ namespace HelpDesk.Controllers
         public async Task<IActionResult> Index(string? durum)
         {
             var userId = _userManager.GetUserId(User)!;
-            var query = _context.Tickets
-                .Include(t => t.Category)
-                .Where(t => t.MusteriId == userId)
-                .AsQueryable();
+            var parsedDurum = ParseDurum(durum);
 
-            if (!string.IsNullOrWhiteSpace(durum) && Enum.TryParse<TicketDurumu>(durum, out var parsedDurum))
-                query = query.Where(t => t.Durum == parsedDurum);
-
-            var tickets = await query
-                .OrderByDescending(t => t.OlusturmaTarihi)
-                .ToListAsync();
+            var tickets = await _ticketService.GetMusteriTalepleriAsync(userId, parsedDurum);
+            var sayilar = await _ticketService.GetMusteriDurumSayilariAsync(userId);
 
             ViewBag.SeciliDurum = durum;
+            ViewBag.DurumSayilari = sayilar;
+            ViewBag.ToplamSayi = sayilar.Values.Sum();
             return View(tickets);
         }
 
@@ -66,20 +60,7 @@ namespace HelpDesk.Controllers
             }
 
             var userId = _userManager.GetUserId(User)!;
-            var ticket = new Ticket
-            {
-                Baslik = model.Baslik,
-                Aciklama = model.Aciklama,
-                CategoryId = model.CategoryId,
-                Oncelik = model.Oncelik,
-                Durum = TicketDurumu.Açık,
-                MusteriId = userId,
-                OlusturmaTarihi = DateTime.Now,
-                GuncellenmeTarihi = DateTime.Now
-            };
-
-            _context.Tickets.Add(ticket);
-            await _context.SaveChangesAsync();
+            await _ticketService.OlusturAsync(userId, model);
 
             TempData["Success"] = "Destek talebiniz başarıyla oluşturuldu.";
             return RedirectToAction(nameof(Index));
@@ -90,22 +71,8 @@ namespace HelpDesk.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = _userManager.GetUserId(User)!;
-            var ticket = await _context.Tickets
-                .Include(t => t.Category)
-                .Include(t => t.Musteri)
-                .Include(t => t.AtananAjan)
-                .Include(t => t.Yanitlar)
-                    .ThenInclude(r => r.Yazar)
-                .FirstOrDefaultAsync(t => t.Id == id && t.MusteriId == userId);
-
-            if (ticket == null) return NotFound();
-
-            var model = new TicketDetailsViewModel
-            {
-                Ticket = ticket,
-                Yanitlar = ticket.Yanitlar.OrderBy(r => r.OlusturmaTarihi).ToList(),
-                YeniYanit = new TicketReplyViewModel { TicketId = id }
-            };
+            var model = await _ticketService.GetMusteriDetayAsync(id, userId);
+            if (model == null) return NotFound();
 
             return View(model);
         }
@@ -115,29 +82,15 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddReply(TicketReplyViewModel model)
         {
-            var userId = _userManager.GetUserId(User)!;
-            var ticket = await _context.Tickets
-                .FirstOrDefaultAsync(t => t.Id == model.TicketId && t.MusteriId == userId);
-
-            if (ticket == null) return NotFound();
-
             if (!ModelState.IsValid)
-                return RedirectToAction(nameof(Details), new { id = model.TicketId });
-
-            var reply = new TicketReply
             {
-                TicketId = model.TicketId,
-                YazarId = userId,
-                Mesaj = model.Mesaj,
-                OlusturmaTarihi = DateTime.Now
-            };
+                TempData["Error"] = "Yanıt mesajı boş olamaz.";
+                return RedirectToAction(nameof(Details), new { id = model.TicketId });
+            }
 
-            ticket.GuncellenmeTarihi = DateTime.Now;
-            if (ticket.Durum == TicketDurumu.Çözüldü || ticket.Durum == TicketDurumu.Kapatıldı)
-                ticket.Durum = TicketDurumu.Açık;
-
-            _context.TicketReplies.Add(reply);
-            await _context.SaveChangesAsync();
+            var userId = _userManager.GetUserId(User)!;
+            var ok = await _ticketService.MusteriYanitEkleAsync(model.TicketId, userId, model.Mesaj);
+            if (!ok) return NotFound();
 
             TempData["Success"] = "Yanıtınız eklendi.";
             return RedirectToAction(nameof(Details), new { id = model.TicketId });
@@ -149,29 +102,25 @@ namespace HelpDesk.Controllers
         public async Task<IActionResult> Close(int id)
         {
             var userId = _userManager.GetUserId(User)!;
-            var ticket = await _context.Tickets
-                .FirstOrDefaultAsync(t => t.Id == id && t.MusteriId == userId);
+            var sonuc = await _ticketService.MusteriKapatAsync(id, userId);
+            if (sonuc == null) return NotFound();
 
-            if (ticket == null) return NotFound();
-
-            if (ticket.Durum != TicketDurumu.Kapatıldı)
-            {
-                ticket.Durum = TicketDurumu.Kapatıldı;
-                ticket.GuncellenmeTarihi = DateTime.Now;
-                await _context.SaveChangesAsync();
+            if (sonuc == true)
                 TempData["Success"] = "Talebiniz kapatıldı.";
-            }
 
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        // Boş/geçersiz değerleri null'a indirgeyen durum ayrıştırıcı.
+        private static TicketDurumu? ParseDurum(string? durum) =>
+            !string.IsNullOrWhiteSpace(durum) && Enum.TryParse<TicketDurumu>(durum, out var d) ? d : null;
+
         private async Task<List<SelectListItem>> GetKategoriListesiAsync()
         {
-            return await _context.Categories
-                .Where(c => c.AktifMi)
-                .OrderBy(c => c.Ad)
+            var kategoriler = await _ticketService.GetAktifKategorilerAsync();
+            return kategoriler
                 .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Ad })
-                .ToListAsync();
+                .ToList();
         }
 
         private static List<SelectListItem> GetOncelikListesi()

@@ -13,6 +13,7 @@ namespace HelpDesk.Data
 
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketReply> TicketReplies { get; set; }
+        public DbSet<TicketHistory> TicketHistories { get; set; }
         public DbSet<Category> Categories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -36,6 +37,20 @@ namespace HelpDesk.Data
                 .WithMany()
                 .HasForeignKey(r => r.YazarId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // İşlem geçmişi: talep silinirse geçmişi de silinir; işlemi yapan
+            // kullanıcı silinirse kayıt korunur (AktorId null'a düşer).
+            builder.Entity<TicketHistory>()
+                .HasOne(h => h.Ticket)
+                .WithMany(t => t.Gecmis)
+                .HasForeignKey(h => h.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<TicketHistory>()
+                .HasOne(h => h.Aktor)
+                .WithMany()
+                .HasForeignKey(h => h.AktorId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

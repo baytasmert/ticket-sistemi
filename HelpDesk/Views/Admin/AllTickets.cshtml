@@ -10,10 +10,17 @@
         @await Html.PartialAsync("_AdminSidebar")
 
         <div class="col-md-9">
-            <h2 class="mb-4">Tüm Talepler</h2>
+            @await Html.PartialAsync("_AlertPartial")
+
+            <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-0">Tüm Talepler</h2>
+                    <p class="text-muted mb-0">@Model.Count talep listeleniyor</p>
+                </div>
+            </div>
 
             <div class="mb-3">
-                <div class="btn-group" role="group">
+                <div class="btn-group flex-wrap" role="group">
                     <a asp-action="AllTickets" class="btn btn-outline-secondary @(seciliDurum == null ? "active" : "")">Tümü</a>
                     <a asp-action="AllTickets" asp-route-durum="Açık" class="btn btn-outline-primary @(seciliDurum == "Açık" ? "active" : "")">Açık</a>
                     <a asp-action="AllTickets" asp-route-durum="İşlemde" class="btn btn-outline-warning @(seciliDurum == "İşlemde" ? "active" : "")">İşlemde</a>
@@ -24,11 +31,11 @@
 
             @if (!Model.Any())
             {
-                <div class="alert alert-info">Bu durumda talep bulunamadı.</div>
+                <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Bu durumda talep bulunamadı.</div>
             }
             else
             {
-                <div class="card shadow-sm">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
@@ -42,36 +49,36 @@
                                         <th>Öncelik</th>
                                         <th>Atanan</th>
                                         <th>Tarih</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var ticket in Model)
                                     {
-                                        var durumBadge = ticket.Durum switch
-                                        {
-                                            HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
-                                            HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
-                                            HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
-                                            HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
-                                            _ => "bg-secondary"
-                                        };
-                                        var oncelikBadge = ticket.Oncelik switch
-                                        {
-                                            HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
-                                            HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
-                                            HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
-                                            HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
-                                            _ => "bg-secondary"
-                                        };
-                                        <tr>
+                                        var gecikmis = TicketViewHelpers.Gecikmis(ticket);
+                                        <tr class="@(gecikmis ? "table-danger" : "")">
                                             <td class="text-muted small">@ticket.Id</td>
-                                            <td class="fw-semibold">@ticket.Baslik</td>
-                                            <td>@ticket.Musteri?.AdSoyad</td>
-                                            <td>@ticket.Category?.Ad</td>
-                                            <td><span class="badge @durumBadge">@ticket.Durum</span></td>
-                                            <td><span class="badge @oncelikBadge">@ticket.Oncelik</span></td>
-                                            <td>@(ticket.AtananAjan?.AdSoyad ?? "—")</td>
-                                            <td class="text-muted small">@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td class="fw-semibold">
+                                                @ticket.Baslik
+                                                @if (gecikmis)
+                                                {
+                                                    <span class="badge bg-danger ms-1" title="@TicketViewHelpers.SlaMetni(ticket)">
+                                                        <i class="bi bi-exclamation-triangle"></i> Gecikti
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="small">@ticket.Musteri?.AdSoyad</td>
+                                            <td class="small">@ticket.Category?.Ad</td>
+                                            <td>@TicketViewHelpers.DurumRozet(ticket.Durum)</td>
+                                            <td>@TicketViewHelpers.OncelikRozet(ticket.Oncelik)</td>
+                                            <td class="small">@(ticket.AtananAjan?.AdSoyad ?? "—")</td>
+                                            <td class="text-muted small" title="@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")">@TicketViewHelpers.GoreceliZaman(ticket.OlusturmaTarihi)</td>
+                                            <td>
+                                                <a asp-controller="Support" asp-action="Details" asp-route-id="@ticket.Id"
+                                                   class="btn btn-sm btn-outline-secondary" title="Detayları gör">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>
