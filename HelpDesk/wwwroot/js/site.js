@@ -1,30 +1,21 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Site JavaScript dosyasi yuklendi.");
-
     markActiveMenu();
     addClockToFooter();
     addScrollToTopButton();
     setupPasswordToggles();
 
-    var alerts = document.querySelectorAll(".alert");
+    // Yalnızca BAŞARI bildirimleri bir süre sonra otomatik kapanır.
+    // Hata/uyarı mesajları, önemli geri bildirim kaybolmasın diye kullanıcı
+    // kapatana kadar (alert-dismissible kapatma butonuyla) görünür kalır.
+    var basariAlerts = document.querySelectorAll(".alert-success");
 
-    alerts.forEach(function (alert) {
+    basariAlerts.forEach(function (alert) {
         setTimeout(function () {
-            alert.style.display = "none";
-        }, 3000);
-    });
-
-    var forms = document.querySelectorAll("form");
-
-    forms.forEach(function (form) {
-        form.addEventListener("submit", function () {
-            var submitButton = form.querySelector("button[type='submit']");
-
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.textContent = "Gonderiliyor...";
-            }
-        });
+            alert.classList.remove("show");
+            setTimeout(function () {
+                alert.style.display = "none";
+            }, 300);
+        }, 4000);
     });
 
     var nameInputs = document.querySelectorAll("input[name='AdSoyad']");

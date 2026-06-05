@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HelpDesk.Helpers;
 using HelpDesk.Models;
+using HelpDesk.Services;
 using HelpDesk.ViewModels;
 using HelpDesk.Data;
 
@@ -14,40 +16,73 @@ namespace HelpDesk.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
+        private readonly ITicketService _ticketService;
 
-        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
+        public AdminController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext context,
+            ITicketService ticketService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
+            _ticketService = ticketService;
         }
 
         public async Task<IActionResult> Dashboard()
         {
-            var toplamKullanici = _userManager.Users.Count();
-            var tickets = _context.Tickets.ToList();
+            var adminId = _userManager.GetUserId(User)!;
             var simdi = DateTime.Now;
 
+            // Talep analitikleri (durum/kategori/atanmamış/son talepler) servis katmanından.
+            var ts = await _ticketService.GetDashboardAsync(adminId);
             // Rol başına TEK sorgu (N+1 yerine sabit sayıda sorgu).
-            var rolDagilimi = await GetRoleCountsAsync();
+            var rol = await GetRoleCountsAsync();
 
-            var stats = new Dictionary<string, int>
+            // Gecikmiş: açık/işlemde olup öncelik bazlı SLA süresini aşan talepler.
+            var acikTalepler = await _context.Tickets
+                .Where(t => t.Durum == TicketDurumu.Açık || t.Durum == TicketDurumu.İşlemde)
+                .Select(t => new { t.Oncelik, t.OlusturmaTarihi })
+                .ToListAsync();
+            var gecikmis = acikTalepler.Count(t => simdi > t.OlusturmaTarihi + TicketViewHelpers.SlaSure(t.Oncelik));
+
+            // Ortalama çözüm süresi: çözülen/kapatılan taleplerde (güncelleme - oluşturma).
+            var cozulenler = await _context.Tickets
+                .Where(t => t.Durum == TicketDurumu.Çözüldü || t.Durum == TicketDurumu.Kapatıldı)
+                .Select(t => new { t.OlusturmaTarihi, t.GuncellenmeTarihi })
+                .ToListAsync();
+            var ortSaat = cozulenler.Count > 0
+                ? cozulenler.Average(t => (t.GuncellenmeTarihi - t.OlusturmaTarihi).TotalHours)
+                : 0;
+
+            var vm = new AdminDashboardViewModel
             {
-                { "ToplamKullanici", toplamKullanici },
-                { "ToplamMusteri", rolDagilimi["Customer"] },
-                { "ToplamDestek", rolDagilimi["SupportAgent"] },
-                { "ToplamAdmin", rolDagilimi["Admin"] },
-                // Bu ay açılan talepler
-                { "BuAyAcilan", tickets.Count(t =>
-                    t.OlusturmaTarihi.Year == simdi.Year && t.OlusturmaTarihi.Month == simdi.Month) },
-                // Bu ay tamamlanan (çözüldü/kapatıldı) talepler
-                { "BuAyTamamlanan", tickets.Count(t =>
+                ToplamKullanici = await _userManager.Users.CountAsync(),
+                ToplamMusteri = rol["Customer"],
+                ToplamDestek = rol["SupportAgent"],
+                ToplamAdmin = rol["Admin"],
+
+                ToplamTalep = ts.ToplamTalep,
+                Acik = ts.AcikTalep,
+                Islemde = ts.IslemdeTalep,
+                Cozuldu = ts.CozulduTalep,
+                Kapatildi = ts.KapatildiTalep,
+                Atanmamis = ts.AtanmamisTalep,
+                Gecikmis = gecikmis,
+
+                BuAyAcilan = await _context.Tickets.CountAsync(t =>
+                    t.OlusturmaTarihi.Year == simdi.Year && t.OlusturmaTarihi.Month == simdi.Month),
+                BuAyTamamlanan = await _context.Tickets.CountAsync(t =>
                     (t.Durum == TicketDurumu.Çözüldü || t.Durum == TicketDurumu.Kapatıldı) &&
-                    t.GuncellenmeTarihi.Year == simdi.Year && t.GuncellenmeTarihi.Month == simdi.Month) }
+                    t.GuncellenmeTarihi.Year == simdi.Year && t.GuncellenmeTarihi.Month == simdi.Month),
+                OrtalamaCozumSaati = ortSaat,
+
+                KategoriDagilimi = ts.KategoriDagilimi,
+                SonTalepler = ts.SonTalepler
             };
 
-            ViewBag.Stats = stats;
-            return View();
+            return View(vm);
         }
 
         // Her rol için kullanıcı sayısını rol başına tek sorgu ile döndürür.

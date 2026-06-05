@@ -41,5 +41,7 @@ namespace HelpDesk.Models
         public DateTime GuncellenmeTarihi { get; set; } = DateTime.Now;
 
         public ICollection<TicketReply> Yanitlar { get; set; } = new List<TicketReply>();
+
+        public ICollection<TicketHistory> Gecmis { get; set; } = new List<TicketHistory>();
     }
 }

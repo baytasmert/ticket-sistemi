@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using HelpDesk.Models;
+using HelpDesk.Services;
 using HelpDesk.ViewModels;
 
 namespace HelpDesk.Controllers
@@ -10,16 +11,16 @@ namespace HelpDesk.Controllers
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly LoginThrottle _loginThrottle;
 
-        // In-memory rate limiting
-        private static Dictionary<string, (int attempts, DateTime lastAttempt)> _loginAttempts = new();
-        private const int MAX_LOGIN_ATTEMPTS = 5;
-        private const int LOCKOUT_DURATION_MINUTES = 15;
-
-        public StaffController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+        public StaffController(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            LoginThrottle loginThrottle)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _loginThrottle = loginThrottle;
         }
 
         [HttpGet("login")]
@@ -32,22 +33,14 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            // Rate limiting check
+            // Hız sınırlaması: kilitliyse kalan süreyi göster.
             var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            if (_loginAttempts.TryGetValue(clientIp, out var attempt))
+            var kalan = _loginThrottle.GetLockoutRemaining(clientIp);
+            if (kalan.HasValue)
             {
-                if (DateTime.UtcNow - attempt.lastAttempt < TimeSpan.FromMinutes(LOCKOUT_DURATION_MINUTES))
-                {
-                    if (attempt.attempts >= MAX_LOGIN_ATTEMPTS)
-                    {
-                        ModelState.AddModelError(string.Empty, $"Çok fazla başarısız deneme. {LOCKOUT_DURATION_MINUTES} dakika sonra tekrar deneyin.");
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    _loginAttempts.Remove(clientIp);
-                }
+                ModelState.AddModelError(string.Empty,
+                    $"Çok fazla başarısız deneme. {Math.Ceiling(kalan.Value.TotalMinutes)} dakika sonra tekrar deneyin.");
+                return View(model);
             }
 
             if (ModelState.IsValid)
@@ -77,20 +70,11 @@ namespace HelpDesk.Controllers
 
                 if (result.Succeeded)
                 {
-                    _loginAttempts.Remove(clientIp);
+                    _loginThrottle.Reset(clientIp);
                     return RedirectToAction("Dashboard", "Support");
                 }
 
-                // Track failed attempt
-                if (_loginAttempts.TryGetValue(clientIp, out var failedAttempt))
-                {
-                    _loginAttempts[clientIp] = (failedAttempt.attempts + 1, DateTime.UtcNow);
-                }
-                else
-                {
-                    _loginAttempts[clientIp] = (1, DateTime.UtcNow);
-                }
-
+                _loginThrottle.RegisterFailure(clientIp);
                 ModelState.AddModelError(string.Empty, "Email veya şifre hatalı.");
             }
 

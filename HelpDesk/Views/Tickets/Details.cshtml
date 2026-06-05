@@ -9,38 +9,14 @@
         <a asp-action="Index" class="text-decoration-none">← Taleplerime Dön</a>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
+    @await Html.PartialAsync("_AlertPartial")
 
     <div class="card shadow-sm mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">@Model.Ticket.Baslik</h4>
-            <div class="d-flex gap-2">
-                @{
-                    var durumBadge = Model.Ticket.Durum switch
-                    {
-                        HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
-                        HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
-                        HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
-                        HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
-                        _ => "bg-secondary"
-                    };
-                    var oncelikBadge = Model.Ticket.Oncelik switch
-                    {
-                        HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
-                        HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
-                        HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
-                        HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
-                        _ => "bg-secondary"
-                    };
-                }
-                <span class="badge @durumBadge">@Model.Ticket.Durum</span>
-                <span class="badge @oncelikBadge">@Model.Ticket.Oncelik</span>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge @TicketViewHelpers.DurumClass(Model.Ticket.Durum)">@Model.Ticket.Durum</span>
+                <span class="badge @TicketViewHelpers.OncelikClass(Model.Ticket.Oncelik)">@Model.Ticket.Oncelik</span>
                 @if (!kapatildi)
                 {
                     <form asp-action="Close" asp-route-id="@Model.Ticket.Id" method="post" class="d-inline"
@@ -56,8 +32,12 @@
         <div class="card-body">
             <div class="row text-muted small mb-3">
                 <div class="col-sm-3"><strong>Kategori:</strong> @Model.Ticket.Category?.Ad</div>
-                <div class="col-sm-3"><strong>Oluşturulma:</strong> @Model.Ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</div>
-                <div class="col-sm-3"><strong>Güncelleme:</strong> @Model.Ticket.GuncellenmeTarihi.ToString("dd.MM.yyyy HH:mm")</div>
+                <div class="col-sm-3">
+                    <strong>Oluşturulma:</strong> @Model.Ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")
+                </div>
+                <div class="col-sm-3">
+                    <strong>Son Güncelleme:</strong> @TicketViewHelpers.GoreceliZaman(Model.Ticket.GuncellenmeTarihi)
+                </div>
                 <div class="col-sm-3">
                     <strong>Atanan:</strong>
                     @(Model.Ticket.AtananAjan?.AdSoyad ?? "Atanmamış")
@@ -68,54 +48,95 @@
         </div>
     </div>
 
-    <h5 class="mb-3">Yanıtlar (@Model.Yanitlar.Count)</h5>
+    <div class="row">
+        <div class="col-lg-8">
+            <h5 class="mb-3">Yanıtlar (@Model.Yanitlar.Count)</h5>
 
-    @if (!Model.Yanitlar.Any())
-    {
-        <div class="text-muted mb-4">Henüz yanıt yok.</div>
-    }
-    else
-    {
-        @foreach (var yanit in Model.Yanitlar)
-        {
-            var isMüşteri = yanit.YazarId == Model.Ticket.MusteriId;
-            var cardClass = isMüşteri ? "border-start border-primary border-3" : "border-start border-success border-3";
-            var authorLabel = isMüşteri ? "Siz" : (yanit.Yazar?.AdSoyad ?? "Destek");
-            <div class="card mb-3 @cardClass">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <strong>@authorLabel</strong>
-                        <span class="text-muted small">@yanit.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</span>
+            @if (!Model.Yanitlar.Any())
+            {
+                <div class="text-muted mb-4">Henüz yanıt yok.</div>
+            }
+            else
+            {
+                @foreach (var yanit in Model.Yanitlar)
+                {
+                    var isMüşteri = yanit.YazarId == Model.Ticket.MusteriId;
+                    var cardClass = isMüşteri ? "border-primary" : "border-success";
+                    var authorLabel = isMüşteri ? "Siz" : (yanit.Yazar?.AdSoyad ?? "Destek");
+                    var roleBadge = isMüşteri ? "bg-primary" : "bg-success";
+                    var roleLabel = isMüşteri ? "Siz" : "Destek";
+                    <div class="card mb-3 border-start @cardClass border-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    <span class="badge @roleBadge me-2">@roleLabel</span>
+                                    <strong>@authorLabel</strong>
+                                </div>
+                                <span class="text-muted small" title="@yanit.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")">@TicketViewHelpers.GoreceliZaman(yanit.OlusturmaTarihi)</span>
+                            </div>
+                            <div style="white-space: pre-wrap;">@yanit.Mesaj</div>
+                        </div>
                     </div>
-                    <div style="white-space: pre-wrap;">@yanit.Mesaj</div>
+                }
+            }
+
+            @if (kapatildi)
+            {
+                <div class="alert alert-secondary">Bu talep kapatılmıştır. Yeni bir sorun için yeni talep oluşturun.</div>
+            }
+            else
+            {
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header"><h6 class="mb-0">Yanıt Ekle</h6></div>
+                    <div class="card-body">
+                        <form asp-action="AddReply" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="YeniYanit.TicketId" />
+                            <div class="mb-3">
+                                <label asp-for="YeniYanit.Mesaj" class="form-label"></label>
+                                <textarea asp-for="YeniYanit.Mesaj" class="form-control" rows="4"
+                                          placeholder="Yanıtınızı yazın..."></textarea>
+                                <span asp-validation-for="YeniYanit.Mesaj" class="text-danger small"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Yanıt Gönder</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Talep Geçmişi -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Talep Geçmişi</h6>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Gecmis.Any())
+                    {
+                        <div class="text-muted small fst-italic">Kayıt yok.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled mb-0 ticket-timeline">
+                            @foreach (var h in Model.Gecmis)
+                            {
+                                <li class="d-flex gap-2 pb-3">
+                                    <div class="@TicketViewHelpers.IslemRenk(h.Tur)">
+                                        <i class="bi @TicketViewHelpers.IslemIkon(h.Tur)"></i>
+                                    </div>
+                                    <div class="small">
+                                        <div>@h.Aciklama</div>
+                                        <div class="text-muted">@TicketViewHelpers.GoreceliZaman(h.OlusturmaTarihi)</div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
                 </div>
             </div>
-        }
-    }
-
-    @if (kapatildi)
-    {
-        <div class="alert alert-secondary">Bu talep kapatılmıştır. Yeni bir sorun için yeni talep oluşturun.</div>
-    }
-    else
-    {
-        <div class="card shadow-sm mt-4">
-            <div class="card-header"><h6 class="mb-0">Yanıt Ekle</h6></div>
-            <div class="card-body">
-                <form asp-action="AddReply" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="YeniYanit.TicketId" />
-                    <div class="mb-3">
-                        <label asp-for="YeniYanit.Mesaj" class="form-label"></label>
-                        <textarea asp-for="YeniYanit.Mesaj" class="form-control" rows="4"
-                                  placeholder="Yanıtınızı yazın..."></textarea>
-                        <span asp-validation-for="YeniYanit.Mesaj" class="text-danger small"></span>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Yanıt Gönder</button>
-                </form>
-            </div>
         </div>
-    }
+    </div>
 </div>
 
 @section Scripts {

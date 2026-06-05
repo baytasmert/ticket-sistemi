@@ -2,101 +2,113 @@
 @{
     ViewData["Title"] = "Taleplerim";
     var seciliDurum = ViewBag.SeciliDurum as string;
+    var sayilar = ViewBag.DurumSayilari as Dictionary<HelpDesk.Models.TicketDurumu, int> ?? new();
+    var toplam = (int)(ViewBag.ToplamSayi ?? 0);
+    int Say(HelpDesk.Models.TicketDurumu d) => sayilar.TryGetValue(d, out var n) ? n : 0;
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Destek Taleplerim</h2>
-        <a asp-action="Create" class="btn btn-primary">+ Yeni Talep</a>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Destek Taleplerim</h2>
+            <p class="text-muted mb-0">Toplam @toplam talep</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Yeni Talep
+        </a>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
+    @await Html.PartialAsync("_AlertPartial")
 
-    <div class="mb-3">
-        <div class="btn-group" role="group">
-            <a asp-action="Index" class="btn btn-outline-secondary @(seciliDurum == null ? "active" : "")">Tümü</a>
-            <a asp-action="Index" asp-route-durum="Açık" class="btn btn-outline-primary @(seciliDurum == "Açık" ? "active" : "")">Açık</a>
-            <a asp-action="Index" asp-route-durum="İşlemde" class="btn btn-outline-warning @(seciliDurum == "İşlemde" ? "active" : "")">İşlemde</a>
-            <a asp-action="Index" asp-route-durum="Çözüldü" class="btn btn-outline-success @(seciliDurum == "Çözüldü" ? "active" : "")">Çözüldü</a>
-            <a asp-action="Index" asp-route-durum="Kapatıldı" class="btn btn-outline-dark @(seciliDurum == "Kapatıldı" ? "active" : "")">Kapatıldı</a>
-        </div>
+    <!-- Durum Özet Kartları (tıklanabilir filtre) -->
+    <div class="row g-2 mb-4">
+        @{
+            var kartlar = new[]
+            {
+                (Etiket: "Tümü", Durum: (HelpDesk.Models.TicketDurumu?)null, Sayi: toplam, Renk: "primary", Ikon: "bi-collection", Key: (string?)null),
+                (Etiket: "Açık", Durum: (HelpDesk.Models.TicketDurumu?)HelpDesk.Models.TicketDurumu.Açık, Sayi: Say(HelpDesk.Models.TicketDurumu.Açık), Renk: "primary", Ikon: "bi-envelope-open", Key: "Açık"),
+                (Etiket: "İşlemde", Durum: (HelpDesk.Models.TicketDurumu?)HelpDesk.Models.TicketDurumu.İşlemde, Sayi: Say(HelpDesk.Models.TicketDurumu.İşlemde), Renk: "warning", Ikon: "bi-arrow-repeat", Key: "İşlemde"),
+                (Etiket: "Çözüldü", Durum: (HelpDesk.Models.TicketDurumu?)HelpDesk.Models.TicketDurumu.Çözüldü, Sayi: Say(HelpDesk.Models.TicketDurumu.Çözüldü), Renk: "success", Ikon: "bi-check-circle", Key: "Çözüldü"),
+                (Etiket: "Kapatıldı", Durum: (HelpDesk.Models.TicketDurumu?)HelpDesk.Models.TicketDurumu.Kapatıldı, Sayi: Say(HelpDesk.Models.TicketDurumu.Kapatıldı), Renk: "secondary", Ikon: "bi-archive", Key: "Kapatıldı")
+            };
+        }
+        @foreach (var k in kartlar)
+        {
+            var aktif = seciliDurum == k.Key;
+            <div class="col">
+                <a asp-action="Index" asp-route-durum="@k.Key" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 stat-card @(aktif ? $"border-bottom border-{k.Renk} border-3" : "")">
+                        <div class="card-body text-center py-3">
+                            <div class="text-@k.Renk mb-1"><i class="bi @k.Ikon fs-4"></i></div>
+                            <h4 class="fw-bold mb-0 @(aktif ? $"text-{k.Renk}" : "")">@k.Sayi</h4>
+                            <div class="text-muted small">@k.Etiket</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
     </div>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info">
-            @if (seciliDurum != null)
-            {
-                <span>Bu durumda talep bulunamadı.</span>
-            }
-            else
-            {
-                <span>Henüz destek talebi oluşturmadınız. <a asp-action="Create">İlk talebinizi oluşturun.</a></span>
-            }
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                @if (seciliDurum != null)
+                {
+                    <p class="text-muted mt-3 mb-2">Bu durumda talep bulunamadı.</p>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Tüm talepleri göster</a>
+                }
+                else
+                {
+                    <p class="text-muted mt-3 mb-2">Henüz destek talebi oluşturmadınız.</p>
+                    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>İlk talebinizi oluşturun</a>
+                }
+            </div>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Başlık</th>
-                        <th>Kategori</th>
-                        <th>Durum</th>
-                        <th>Öncelik</th>
-                        <th>Tarih</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var ticket in Model)
-                    {
-                        <tr>
-                            <td class="text-muted small">@ticket.Id</td>
-                            <td>
-                                <a asp-action="Details" asp-route-id="@ticket.Id" class="text-decoration-none fw-semibold">
-                                    @ticket.Baslik
-                                </a>
-                            </td>
-                            <td>@ticket.Category?.Ad</td>
-                            <td>
-                                @{
-                                    var durumBadge = ticket.Durum switch
-                                    {
-                                        HelpDesk.Models.TicketDurumu.Açık => "bg-primary",
-                                        HelpDesk.Models.TicketDurumu.İşlemde => "bg-warning text-dark",
-                                        HelpDesk.Models.TicketDurumu.Çözüldü => "bg-success",
-                                        HelpDesk.Models.TicketDurumu.Kapatıldı => "bg-secondary",
-                                        _ => "bg-secondary"
-                                    };
-                                }
-                                <span class="badge @durumBadge">@ticket.Durum</span>
-                            </td>
-                            <td>
-                                @{
-                                    var oncelikBadge = ticket.Oncelik switch
-                                    {
-                                        HelpDesk.Models.TicketOnceligi.Düşük => "bg-info text-dark",
-                                        HelpDesk.Models.TicketOnceligi.Orta => "bg-secondary",
-                                        HelpDesk.Models.TicketOnceligi.Yüksek => "bg-warning text-dark",
-                                        HelpDesk.Models.TicketOnceligi.Kritik => "bg-danger",
-                                        _ => "bg-secondary"
-                                    };
-                                }
-                                <span class="badge @oncelikBadge">@ticket.Oncelik</span>
-                            </td>
-                            <td class="text-muted small">@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Başlık</th>
+                                <th>Kategori</th>
+                                <th>Durum</th>
+                                <th>Öncelik</th>
+                                <th>Oluşturulma</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticket in Model)
+                            {
+                                <tr>
+                                    <td class="text-muted small">@ticket.Id</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@ticket.Id" class="text-decoration-none fw-semibold">
+                                            @ticket.Baslik
+                                        </a>
+                                    </td>
+                                    <td class="small">@ticket.Category?.Ad</td>
+                                    <td>@TicketViewHelpers.DurumRozet(ticket.Durum)</td>
+                                    <td>@TicketViewHelpers.OncelikRozet(ticket.Oncelik)</td>
+                                    <td class="text-muted small" title="@ticket.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")">@TicketViewHelpers.GoreceliZaman(ticket.OlusturmaTarihi)</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@ticket.Id" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     }
 </div>

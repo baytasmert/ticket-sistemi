@@ -2,145 +2,192 @@
 
 @{
     ViewData["Title"] = "Kullanıcı Yönetimi";
+
+    string RolBadge(string rol) => rol switch
+    {
+        "Admin" => "bg-danger",
+        "SupportAgent" => "bg-warning text-dark",
+        "Customer" => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+    string RolAd(string rol) => rol switch
+    {
+        "Admin" => "Admin",
+        "SupportAgent" => "Destek",
+        "Customer" => "Müşteri",
+        _ => rol
+    };
 }
 
 <div class="container-fluid py-4">
     <div class="row">
-        <!-- Sidebar -->
         @await Html.PartialAsync("_AdminSidebar")
 
-        <!-- Main Content -->
         <div class="col-md-9">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>@ViewData["Title"]</h2>
+            @await Html.PartialAsync("_AlertPartial")
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-0">@ViewData["Title"]</h2>
+                    <p class="text-muted mb-0">Toplam @Model.Count kullanıcı</p>
+                </div>
                 <a asp-action="CreateUser" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i> Yeni Kullanıcı Ekle
+                    <i class="bi bi-plus-circle me-1"></i> Yeni Kullanıcı Ekle
                 </a>
             </div>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-<hr />
-
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">Toplam Kullanıcı</h5>
-                <p class="card-text">@ViewBag.Stats["ToplamKullanici"]</p>
+            <!-- Rol Dağılımı -->
+            <div class="row mb-4">
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Toplam</p>
+                                <h3 class="fw-bold mb-0">@ViewBag.Stats["ToplamKullanici"]</h3>
+                            </div>
+                            <i class="bi bi-people text-secondary" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Admin</p>
+                                <h3 class="fw-bold mb-0 text-danger">@ViewBag.Stats["AdminSayisi"]</h3>
+                            </div>
+                            <i class="bi bi-shield-lock text-danger" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Destek</p>
+                                <h3 class="fw-bold mb-0 text-warning">@ViewBag.Stats["SupportAgentSayisi"]</h3>
+                            </div>
+                            <i class="bi bi-headset text-warning" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Müşteri</p>
+                                <h3 class="fw-bold mb-0 text-info">@ViewBag.Stats["CustomerSayisi"]</h3>
+                            </div>
+                            <i class="bi bi-person text-info" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-body">
-                <h5 class="card-title">Admin</h5>
-                <p class="card-text">@ViewBag.Stats["AdminSayisi"]</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">Destek Temsilcisi</h5>
-                <p class="card-text">@ViewBag.Stats["SupportAgentSayisi"]</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">Müşteri</h5>
-                <p class="card-text">@ViewBag.Stats["CustomerSayisi"]</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="mb-3">
-    <form method="get" class="row g-2">
-        <div class="col-md-6">
-            <input type="text" name="search" class="form-control" placeholder="Email veya ad ara..." value="@ViewBag.Search" />
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-outline-primary w-100">Ara</button>
-        </div>
-        <div class="col-md-3">
-            <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100">Temizle</a>
-        </div>
-    </form>
-</div>
-
-<table class="table table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Ad Soyad</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Durum</th>
-            <th>İşlemler</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            <tr>
-                <td>@user.AdSoyad</td>
-                <td>@user.Email</td>
-                <td>
-                    <span class="badge bg-info">@user.Rol</span>
-                </td>
-                <td>
-                    @if (user.AktifMi)
-                    {
-                        <span class="badge bg-success">Aktif</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Pasif</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="EditUser" asp-route-userId="@user.Id" class="btn btn-sm btn-info">
-                        <i class="bi bi-pencil"></i> Düzenle
-                    </a>
-                    <a asp-action="EditRole" asp-route-userId="@user.Id" class="btn btn-sm btn-primary">
-                        Rol Değiştir
-                    </a>
-                    <form asp-action="ToggleActive" asp-route-userId="@user.Id" method="post" style="display: inline;">
-                        @if (user.AktifMi)
-                        {
-                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Bu kullanıcıyı pasif yapmak istediğinize emin misiniz?')">
-                                Pasifleştir
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Bu kullanıcıyı aktif yapmak istediğinize emin misiniz?')">
-                                Aktifleştir
-                            </button>
-                        }
+            <!-- Arama -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-2 align-items-center">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                                <input type="text" name="search" class="form-control" placeholder="Email veya ad ile ara..." value="@ViewBag.Search" />
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="submit" class="btn btn-primary">Ara</button>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">Temizle</a>
+                        </div>
                     </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                </div>
+            </div>
 
+            <!-- Kullanıcı Tablosu -->
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Kullanıcı bulunamadı.</div>
+            }
+            else
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kullanıcı</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Durum</th>
+                                        <th class="text-end">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in Model)
+                                    {
+                                        var basHarf = string.IsNullOrWhiteSpace(user.AdSoyad) ? "?" : user.AdSoyad.Trim()[..1].ToUpper();
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center fw-bold"
+                                                          style="width: 36px; height: 36px;">@basHarf</span>
+                                                    <span class="fw-semibold">@user.AdSoyad</span>
+                                                </div>
+                                            </td>
+                                            <td class="small text-muted">@user.Email</td>
+                                            <td><span class="badge @RolBadge(user.Rol)">@RolAd(user.Rol)</span></td>
+                                            <td>
+                                                @if (user.AktifMi)
+                                                {
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Aktif</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary"><i class="bi bi-slash-circle me-1"></i>Pasif</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a asp-action="EditUser" asp-route-userId="@user.Id" class="btn btn-outline-info" title="Düzenle">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a asp-action="EditRole" asp-route-userId="@user.Id" class="btn btn-outline-primary" title="Rol Değiştir">
+                                                        <i class="bi bi-person-badge"></i>
+                                                    </a>
+                                                    <form asp-action="ToggleActive" asp-route-userId="@user.Id" method="post" class="d-inline">
+                                                        @if (user.AktifMi)
+                                                        {
+                                                            <button type="submit" class="btn btn-outline-warning" title="Pasifleştir"
+                                                                    onclick="return confirm('Bu kullanıcıyı pasif yapmak istediğinize emin misiniz?')">
+                                                                <i class="bi bi-pause-circle"></i>
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="submit" class="btn btn-outline-success" title="Aktifleştir"
+                                                                    onclick="return confirm('Bu kullanıcıyı aktif yapmak istediğinize emin misiniz?')">
+                                                                <i class="bi bi-play-circle"></i>
+                                                            </button>
+                                                        }
+                                                    </form>
+                                                    <form asp-action="DeleteUser" asp-route-userId="@user.Id" method="post" class="d-inline">
+                                                        <button type="submit" class="btn btn-outline-danger" title="Sil"
+                                                                onclick="return confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?')">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
